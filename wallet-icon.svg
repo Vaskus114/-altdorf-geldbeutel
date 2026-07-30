@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="110" fill="#241b17"/>
+  <path d="M88 169c0-35 28-63 63-63h212c34 0 61 25 64 58l12 216c2 24-17 44-41 44H114c-24 0-43-20-41-44l15-211Z" fill="#67302c" stroke="#c49a4b" stroke-width="18"/>
+  <path d="M112 165h288" stroke="#d7b96e" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="256" cy="280" r="76" fill="#c49a4b" stroke="#7d5728" stroke-width="16"/>
+  <circle cx="256" cy="280" r="48" fill="none" stroke="#765126" stroke-width="7"/>
+  <text x="256" y="302" fill="#39251b" font-family="Georgia,serif" font-size="67" font-weight="700" text-anchor="middle">GK</text>
+</svg>
