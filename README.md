@@ -8,6 +8,7 @@ Eine installierbare Offline-Web-App zur Verwaltung mehrerer Charakter-Geldbeutel
 - Goldkronen, Schilling und Pfennige
 - automatische Umrechnung und Wechselgeld
 - Einnahmen, Ausgaben und Buchungsverlauf
+- Backup und Wiederherstellung einzelner Charaktere
 - lokale Speicherung auf dem jeweiligen Gerät
 - offline nutzbar und auf iPhone sowie Android installierbar
 

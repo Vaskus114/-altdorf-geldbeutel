@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#3e1d1c">
+  <meta name="theme-color" content="#0d0c0a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Geldbeutel">
@@ -13,45 +13,46 @@
   <link rel="apple-touch-icon" href="./wallet-icon.svg">
   <title>Altdorfer Geldbeutel</title>
   <style>
-    :root{--ink:#231d19;--muted:#75685d;--paper:#f1e7d2;--wine:#642c2c;--wine-dark:#3e1d1c;--gold:#c89e45;--line:rgba(79,56,38,.18)}
+    :root{--ink:#1b1611;--muted:#6f604d;--paper:#c8b68e;--ash:#151412;--blood:#6f1e20;--rust:#8b5637;--gold:#b58a3d;--bone:#d6c7a4;--line:rgba(50,35,24,.42)}
     *{box-sizing:border-box}
-    html{background:#171312;color-scheme:light}
-    body{margin:0;color:var(--ink);background:radial-gradient(circle at 10% 0%,rgba(183,139,61,.13),transparent 28rem),#171312;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    button,input{font:inherit}button{touch-action:manipulation}
-    .loading{min-height:100dvh;display:grid;place-items:center;color:var(--paper)}
-    .app{width:min(100%,680px);min-height:100dvh;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 18px max(44px,env(safe-area-inset-bottom));background:linear-gradient(rgba(241,231,210,.96),rgba(241,231,210,.96)),repeating-linear-gradient(0deg,transparent 0 3px,rgba(68,48,34,.08) 3px 4px);box-shadow:0 0 70px #000}
-    .topbar,.heading,.wallet-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}.topbar{margin-bottom:22px}
-    .eyebrow{display:block;color:var(--wine);font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
-    h1,h2,h3,p{margin:0}h1,h2,h3{font-family:Georgia,"Times New Roman",serif}h1{font-size:clamp(30px,8vw,42px);line-height:1}h2{font-size:25px;margin-top:4px}
-    .character-button{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 10px;color:var(--ink);background:rgba(255,255,255,.34);border:1px solid var(--line);border-radius:14px}
-    .avatar{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;color:#f8e9c7;background:var(--wine);border:2px solid #a47c55;border-radius:50%;font-family:Georgia,serif;font-weight:800}
-    .character-copy{display:grid;min-width:0;text-align:left}.character-copy strong,.character-copy small{max-width:115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.character-copy small,.character-row small{color:var(--muted);font-size:11px}
-    .wallet{position:relative;overflow:hidden;padding:20px;color:#f7ead0;background:radial-gradient(circle at 80% 20%,rgba(218,172,84,.16),transparent 15rem),linear-gradient(145deg,#392a23,#191514);border:1px solid #806544;border-radius:22px;box-shadow:0 18px 35px rgba(37,24,18,.24),inset 0 0 0 3px rgba(255,255,255,.025)}
-    .wallet:after{content:"";position:absolute;inset:8px;pointer-events:none;border:1px solid rgba(210,175,111,.14);border-radius:16px}.wallet-heading{position:relative;z-index:1;color:#d5c3a2;font:14px Georgia,serif;letter-spacing:.05em}
-    .seal{display:grid;place-items:center;width:34px;height:34px;color:#251a16;background:var(--gold);border-radius:50%;font:800 21px Georgia,serif;box-shadow:inset 0 0 0 3px #8d672d}
+    html{background:#080807;color-scheme:dark}
+    body{margin:0;color:var(--ink);background:radial-gradient(ellipse at 50% -20%,#393027 0,transparent 47%),repeating-linear-gradient(83deg,rgba(255,255,255,.012) 0 1px,transparent 1px 11px),#080807;font-family:Georgia,"Times New Roman",serif}
+    body:before{content:"";position:fixed;inset:0;z-index:50;pointer-events:none;opacity:.17;background:repeating-radial-gradient(circle at 17% 31%,transparent 0 7px,rgba(0,0,0,.32) 8px 9px),repeating-linear-gradient(173deg,transparent 0 19px,rgba(230,201,142,.08) 20px,transparent 21px 47px);mix-blend-mode:multiply}
+    button,input{font:inherit}button{touch-action:manipulation}.loading{min-height:100dvh;display:grid;place-items:center;color:var(--bone)}
+    .app{width:min(100%,680px);min-height:100dvh;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 18px max(44px,env(safe-area-inset-bottom));background:radial-gradient(circle at 85% 8%,rgba(119,52,31,.18),transparent 19rem),repeating-linear-gradient(92deg,transparent 0 31px,rgba(255,255,255,.012) 32px 33px),linear-gradient(145deg,#24211d,#11110f 52%,#1a1714);box-shadow:0 0 80px #000,inset 0 0 80px rgba(0,0,0,.5);border-inline:1px solid #39332b}
+    .topbar,.heading,.wallet-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}.topbar{margin-bottom:22px;padding-bottom:14px;border-bottom:3px double #65543d;color:var(--bone)}
+    .eyebrow{display:block;color:#a77a43;font-size:10px;font-weight:700;letter-spacing:.19em;text-transform:uppercase}
+    h1,h2,h3,p{margin:0}h1,h2,h3{font-family:Georgia,"Times New Roman",serif}h1{font-size:clamp(32px,8vw,44px);line-height:1;color:var(--bone);font-weight:500;letter-spacing:-.035em;text-shadow:0 2px #000,2px 0 rgba(113,37,26,.35)}h2{font-size:25px;margin-top:4px;font-weight:500}
+    .character-button{display:flex;align-items:center;gap:10px;min-width:0;padding:7px 9px;color:var(--bone);background:linear-gradient(#2d2923,#191714);border:1px solid #6b5740;border-radius:2px;box-shadow:inset 0 0 0 2px #12110f,2px 3px 0 rgba(0,0,0,.45)}
+    .avatar{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;color:#dfcfaa;background:radial-gradient(circle at 35% 30%,#7d332d,#3c1213 68%);border:2px ridge #8d6741;border-radius:50%;font-weight:800;box-shadow:inset 0 0 9px #160708}
+    .character-copy{display:grid;min-width:0;text-align:left}.character-copy strong,.character-copy small{max-width:115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.character-copy small,.character-row small{color:#766650;font-size:11px}
+    .wallet{position:relative;overflow:hidden;padding:22px 18px;color:#e3d4b1;background:linear-gradient(115deg,rgba(255,255,255,.025),transparent 38%),repeating-linear-gradient(7deg,transparent 0 13px,rgba(255,255,255,.018) 14px 15px),radial-gradient(circle at 80% 20%,rgba(155,84,43,.17),transparent 15rem),#171513;border:3px double #7a6244;box-shadow:0 14px 25px #090806,inset 0 0 35px #050504;clip-path:polygon(8px 0,calc(100% - 7px) 0,100% 8px,100% calc(100% - 10px),calc(100% - 10px) 100%,7px 100%,0 calc(100% - 8px),0 7px)}
+    .wallet:after{content:"";position:absolute;inset:7px;pointer-events:none;border:1px solid rgba(169,129,74,.25);box-shadow:inset 0 0 18px #000}.wallet-heading{position:relative;z-index:1;color:#b9a683;font-size:14px;letter-spacing:.06em}
+    .seal{display:grid;place-items:center;width:35px;height:35px;color:#24190e;background:radial-gradient(circle at 35% 30%,#d2a94e,#7e5722 68%);border:2px ridge #7d5b2d;border-radius:50%;font-size:21px;font-weight:800;box-shadow:inset 0 0 0 2px rgba(37,23,9,.45),0 2px 4px #000;transform:rotate(-7deg)}
     .coins{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:22px 0 16px}.coin{display:grid;justify-items:center;padding:5px 2px}
-    .coin-mark{display:grid;place-items:center;width:38px;height:38px;margin-bottom:8px;color:#2a201a;border-radius:50%;font:800 12px Georgia,serif;box-shadow:inset 0 0 0 3px rgba(51,32,19,.27),0 3px 9px rgba(0,0,0,.4)}
-    .gold .coin-mark{background:#d5ad54}.silver .coin-mark{background:#c5c2b8}.brass .coin-mark{background:#b57346}.coin strong{font:700 clamp(28px,9vw,42px) Georgia,serif;line-height:1}.coin small{margin-top:4px;color:#baa98e;font-size:10px}.rate{color:#ad9a7d;font-size:11px;text-align:center}
-    .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 30px}.action,.full-button{min-height:54px;border:0;border-radius:14px;color:#fff7e7;font-weight:800;box-shadow:0 5px 10px rgba(75,48,31,.16)}
-    .action span{margin-right:7px;font-size:21px;vertical-align:-1px}.income{background:#465e42}.expense{background:var(--wine)}
-    .ledger{padding-top:21px;border-top:1px solid var(--line)}.heading>span{display:grid;place-items:center;min-width:30px;height:30px;color:var(--muted);border:1px solid var(--line);border-radius:20px;font-size:12px}
-    .empty{display:grid;justify-items:center;padding:42px 15px;color:var(--muted);text-align:center}.empty-coin{display:grid;place-items:center;width:58px;height:58px;margin-bottom:14px;color:#775333;background:#c78b5b;border:4px double #815436;border-radius:50%;font:800 20px Georgia,serif;opacity:.65}.empty h3{color:var(--ink);font-size:19px}.empty p{margin-top:5px;font-size:13px}
+    .coin-mark{display:grid;place-items:center;width:39px;height:39px;margin-bottom:9px;color:#201711;border-radius:48% 52% 45% 55%;font-size:12px;font-weight:800;box-shadow:inset -3px -4px 7px rgba(28,16,8,.48),inset 2px 2px 3px rgba(255,255,255,.16),0 3px 9px #000;transform:rotate(-3deg)}
+    .silver .coin-mark{transform:rotate(5deg)}.brass .coin-mark{transform:rotate(-7deg)}.gold .coin-mark{background:#b68d3e}.silver .coin-mark{background:#969389}.brass .coin-mark{background:#8c593a}.coin strong{font-size:clamp(28px,9vw,42px);line-height:1;text-shadow:0 2px #000}.coin small{margin-top:4px;color:#9e8e73;font-size:10px}.rate{color:#8f7c60;font-size:11px;text-align:center;font-style:italic}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 24px}.action,.full-button{min-height:52px;border:2px ridge #73583d;border-radius:2px;color:#e5d4ae;font-weight:700;letter-spacing:.02em;box-shadow:inset 0 0 16px rgba(0,0,0,.55),3px 4px 0 #080706;text-shadow:0 1px #000}
+    .action span{margin-right:7px;font-size:21px;vertical-align:-1px}.income{background:linear-gradient(#3d5036,#263322)}.expense{background:linear-gradient(#72262a,#421315)}
+    .ledger{position:relative;padding:20px 16px 10px;background:radial-gradient(circle at 18% 9%,rgba(255,255,255,.22),transparent 8rem),repeating-linear-gradient(2deg,transparent 0 26px,rgba(69,45,25,.08) 27px 28px),linear-gradient(103deg,#b8a57e,#d0be96 48%,#a9946e);border:1px solid #6f5a3f;box-shadow:inset 0 0 30px rgba(49,31,17,.27),0 7px 16px #080706;clip-path:polygon(0 4px,15% 0,31% 3px,49% 0,69% 4px,84% 1px,100% 5px,100% 100%,0 100%)}.ledger .eyebrow{color:#713224}.ledger .heading{border-bottom:2px solid rgba(67,43,26,.42);padding-bottom:12px}.heading>span{display:grid;place-items:center;min-width:30px;height:30px;color:#594a39;border:2px double #735f46;border-radius:50%;font-size:12px}
+    .empty{display:grid;justify-items:center;padding:38px 15px;color:#665644;text-align:center}.empty-coin{display:grid;place-items:center;width:58px;height:58px;margin-bottom:14px;color:#4a2d1b;background:#976141;border:4px double #67432c;border-radius:47% 53% 49% 51%;font-size:20px;font-weight:800;opacity:.7;transform:rotate(4deg)}.empty h3{color:var(--ink);font-size:19px}.empty p{margin-top:5px;font-size:13px;font-style:italic}
     .transactions{margin-top:15px}.transaction{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;padding:14px 0;border-bottom:1px solid var(--line)}
-    .transaction-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;font-size:20px;font-weight:800}.transaction-icon.income{color:#385337;background:#d5dfcb}.transaction-icon.expense{color:var(--wine);background:#e5cfca}
-    .transaction-copy{display:grid;min-width:0}.transaction-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.transaction small{margin-top:3px;color:var(--muted);font-size:10px}.transaction-amount{display:grid;justify-items:end;font-size:13px}.transaction-amount.income{color:#42613f;background:transparent}.transaction-amount.expense{color:var(--wine);background:transparent}.undo{padding:3px 0 0;color:var(--muted);background:transparent;border:0;font-size:10px;text-decoration:underline}
-    .modal{position:fixed;z-index:20;inset:0;display:grid;align-items:end}.modal.high{z-index:30}.backdrop{position:absolute;inset:0;width:100%;border:0;background:rgba(16,12,10,.68);backdrop-filter:blur(3px)}
-    .sheet{position:relative;z-index:1;width:min(100%,680px);max-height:88dvh;margin:0 auto;padding:14px 20px max(24px,env(safe-area-inset-bottom));overflow-y:auto;background:var(--paper);border:1px solid #8e765c;border-radius:24px 24px 0 0;box-shadow:0 -20px 50px rgba(0,0,0,.32)}
-    .handle{width:42px;height:4px;margin:0 auto 20px;background:#b4a58f;border-radius:4px}.close{width:38px;height:38px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:50%;font-size:24px}
-    .character-list{margin:18px 0}.character-row{display:grid;grid-template-columns:1fr auto;align-items:center;margin-bottom:8px;border:1px solid var(--line);border-radius:15px}.character-row.selected{border-color:#8d6043;background:rgba(134,92,61,.08)}
-    .character-select{display:flex;align-items:center;gap:12px;min-width:0;padding:11px;color:var(--ink);text-align:left;background:transparent;border:0}.character-select>span:last-child{display:grid;min-width:0}.character-select strong,.character-select small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.delete{width:42px;height:42px;margin-right:5px;color:var(--wine);background:transparent;border:0;font-size:22px}
-    .full-button{width:100%;margin-top:4px;background:var(--wine-dark)}.full-button.income{background:#465e42}.full-button.expense{background:var(--wine)}.full-button:disabled{opacity:.42}
-    .form{display:grid;gap:16px}.form label{display:grid;gap:7px;color:#5f5147;font-size:12px;font-weight:800}.form input{width:100%;min-height:50px;padding:0 14px;color:var(--ink);background:rgba(255,255,255,.42);border:1px solid #b9a78d;border-radius:12px;outline:none}.form input:focus{border-color:var(--wine);box-shadow:0 0 0 3px rgba(100,44,44,.1)}
+    .transaction-icon{display:grid;place-items:center;width:34px;height:34px;border:1px solid #76624a;border-radius:0;font-size:20px;font-weight:800;transform:rotate(-2deg)}.transaction-icon.income{color:#2f4930;background:#879170}.transaction-icon.expense{color:#702025;background:#a98275}
+    .transaction-copy{display:grid;min-width:0}.transaction-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.transaction small{margin-top:3px;color:#6b5b48;font-size:10px}.transaction-amount{display:grid;justify-items:end;font-size:13px}.transaction-amount.income{color:#304b30;background:transparent}.transaction-amount.expense{color:#6f1e20;background:transparent}.undo{padding:3px 0 0;color:#685744;background:transparent;border:0;font-size:10px;text-decoration:underline}
+    .modal{position:fixed;z-index:60;inset:0;display:grid;align-items:end}.modal.high{z-index:70}.backdrop{position:absolute;inset:0;width:100%;border:0;background:rgba(5,5,4,.82);backdrop-filter:blur(2px)}
+    .sheet{position:relative;z-index:1;width:min(100%,680px);max-height:88dvh;margin:0 auto;padding:14px 20px max(24px,env(safe-area-inset-bottom));overflow-y:auto;background:radial-gradient(circle at 15% 12%,rgba(255,255,255,.25),transparent 12rem),repeating-linear-gradient(1deg,transparent 0 28px,rgba(74,49,28,.07) 29px 30px),#c5b38b;border:3px double #71583d;border-radius:4px 4px 0 0;box-shadow:0 -20px 50px rgba(0,0,0,.55),inset 0 0 35px rgba(49,31,17,.22)}
+    .handle{width:42px;height:4px;margin:0 auto 20px;background:#78654d}.close{width:38px;height:38px;color:#574633;background:transparent;border:1px solid #786248;border-radius:1px;font-size:24px}
+    .character-list{margin:18px 0}.character-row{display:grid;grid-template-columns:1fr auto;align-items:center;margin-bottom:8px;border-bottom:1px solid #79644a}.character-row.selected{border:1px solid #754331;background:rgba(102,40,30,.1);box-shadow:inset 4px 0 #6e2522}
+    .character-select{display:flex;align-items:center;gap:12px;min-width:0;padding:11px;color:var(--ink);text-align:left;background:transparent;border:0}.character-select>span:last-child{display:grid;min-width:0}.character-select strong,.character-select small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.delete{width:42px;height:42px;margin-right:5px;color:var(--blood);background:transparent;border:0;font-size:22px}
+    .full-button{width:100%;margin-top:4px;background:linear-gradient(#552026,#321013)}.full-button.income{background:linear-gradient(#3d5036,#263322)}.full-button.expense{background:linear-gradient(#72262a,#421315)}.full-button:disabled{opacity:.42}
+    .form{display:grid;gap:16px}.form label{display:grid;gap:7px;color:#514332;font-size:12px;font-weight:800}.form input{width:100%;min-height:50px;padding:0 14px;color:var(--ink);background:rgba(227,211,172,.5);border:1px solid #796145;border-radius:1px;outline:none}.form input:focus{border-color:var(--blood);box-shadow:0 0 0 2px rgba(100,44,44,.16)}
     .money-inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.money-inputs label{position:relative}.money-inputs label>span{min-height:28px}.money-inputs input{padding-right:32px;font-size:20px;font-weight:800}.money-inputs small{position:absolute;right:11px;bottom:16px;color:var(--muted)}
-    .conversion{padding:10px;color:#59442f;background:rgba(196,153,77,.14);border:1px solid rgba(133,96,46,.22);border-radius:10px;font-size:12px;text-align:center}.error{color:var(--wine);font-size:12px;font-weight:700;text-align:center}
+    .conversion{padding:10px;color:#59442f;background:rgba(112,76,39,.14);border:1px solid rgba(90,58,31,.32);font-size:12px;text-align:center}.error{color:var(--blood);font-size:12px;font-weight:700;text-align:center}
+    .backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 18px}.secondary-button{min-height:44px;padding:8px;color:#33271d;background:rgba(132,105,70,.16);border:1px solid #745c40;border-radius:1px;font-weight:700;font-size:12px}.backup-note{margin:-8px 0 12px;color:#685744;font-size:10px;font-style:italic;text-align:center}
     .hidden{display:none!important}
-    @media(min-width:681px){.app{margin-block:24px;min-height:calc(100dvh - 48px);border-radius:28px}.modal{align-items:center;padding:24px}.sheet{border-radius:24px}}
+    @media(min-width:681px){.app{margin-block:24px;min-height:calc(100dvh - 48px)}.modal{align-items:center;padding:24px}.sheet{border-radius:3px}}
     @media(max-width:390px){.character-copy{display:none}.app{padding-inline:14px}.wallet{padding-inline:13px}.coin strong{font-size:30px}}
-    @media(prefers-reduced-motion:no-preference){.sheet{animation:rise .22s ease-out}.action:active,.full-button:active{transform:translateY(1px)}@keyframes rise{from{transform:translateY(24px);opacity:.6}}}
+    @media(prefers-reduced-motion:no-preference){.sheet{animation:rise .22s ease-out}.action:active,.full-button:active{transform:translate(2px,2px);box-shadow:inset 0 0 16px rgba(0,0,0,.55),1px 2px 0 #080706}@keyframes rise{from{transform:translateY(24px);opacity:.6}}}
   </style>
 </head>
 <body>
@@ -60,7 +61,7 @@
   <template id="app-template">
     <main class="app">
       <header class="topbar">
-        <div><span class="eyebrow">Altdorfer Kontobuch</span><h1>Geldbeutel</h1></div>
+        <div><span class="eyebrow">Münzbuch der Alten Welt</span><h1>Geldbeutel</h1></div>
         <button class="character-button" id="open-characters" aria-label="Charakter wechseln">
           <span class="avatar" id="active-avatar"></span>
           <span class="character-copy"><strong id="active-name"></strong><small id="active-career"></small></span>
@@ -68,7 +69,7 @@
         </button>
       </header>
       <section class="wallet" id="wallet-region">
-        <div class="wallet-heading"><span>Verfügbares Vermögen</span><span class="seal" aria-hidden="true">₰</span></div>
+        <div class="wallet-heading"><span>Was noch in der Börse liegt</span><span class="seal" aria-hidden="true">₰</span></div>
         <div class="coins">
           <article class="coin gold"><span class="coin-mark">GK</span><strong id="balance-gold">0</strong><small>Goldkronen</small></article>
           <article class="coin silver"><span class="coin-mark">S</span><strong id="balance-silver">0</strong><small>Schilling</small></article>
@@ -81,7 +82,7 @@
         <button class="action expense" data-transaction="expense"><span>−</span>Bezahlen</button>
       </section>
       <section class="ledger">
-        <div class="heading"><div><span class="eyebrow">Persönliches Kassenbuch</span><h2>Letzte Buchungen</h2></div><span id="transaction-count">0</span></div>
+        <div class="heading"><div><span class="eyebrow">Mit Tinte und Blut vermerkt</span><h2>Das Schuldbuch</h2></div><span id="transaction-count">0</span></div>
         <div id="transaction-list"></div>
       </section>
     </main>
@@ -146,7 +147,7 @@
             <div class="transaction-copy"><strong>${escapeHtml(transaction.note)}</strong><small>${new Intl.DateTimeFormat("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(transaction.createdAt))}</small></div>
             <div class="transaction-amount ${transaction.type}"><strong>${transaction.type === "income" ? "+" : "−"} ${label(transaction.amount)}</strong><button class="undo" data-undo="${transaction.id}">rückgängig</button></div>
           </article>`).join("")}</div>` : `
-          <div class="empty"><div class="empty-coin">P</div><h3>Noch keine Buchungen</h3><p>Trage die erste Beute oder eine Ausgabe ein.</p></div>`;
+          <div class="empty"><div class="empty-coin">P</div><h3>Das Buch ist noch leer</h3><p>Noch wurde kein Pfennig verdient – oder verloren.</p></div>`;
         document.querySelectorAll("[data-undo]").forEach(button => button.addEventListener("click", () => undo(button.dataset.undo)));
         persist();
       };
@@ -165,7 +166,14 @@
           <div class="character-list">${state.characters.map(character => `<article class="character-row ${character.id===active().id?"selected":""}">
             <button class="character-select" data-select="${character.id}"><span class="avatar">${escapeHtml(character.name.charAt(0).toUpperCase())}</span><span><strong>${escapeHtml(character.name)}</strong><small>${escapeHtml(character.career)} · ${label(character.balance)}</small></span></button>
             ${state.characters.length>1?`<button class="delete" data-delete="${character.id}" aria-label="${escapeHtml(character.name)} löschen">×</button>`:""}
-          </article>`).join("")}</div><button class="full-button" id="new-character">＋ Neuen Charakter anlegen</button></section>`);
+          </article>`).join("")}</div>
+          <div class="backup-actions">
+            <button type="button" class="secondary-button" id="backup-character">↓ ${escapeHtml(active().name)} sichern</button>
+            <button type="button" class="secondary-button" id="restore-character">↑ Sicherung einlesen</button>
+            <input class="hidden" id="backup-file" type="file" accept=".json,application/json">
+          </div>
+          <p class="backup-note">Die Sicherung enthält nur diesen Charakter und sein vollständiges Münzbuch.</p>
+          <button class="full-button" id="new-character">＋ Neuen Charakter anlegen</button></section>`);
         $(".close",layer).addEventListener("click",()=>layer.remove());
         layer.querySelectorAll("[data-select]").forEach(button => button.addEventListener("click",()=>{state.activeId=button.dataset.select;layer.remove();render()}));
         layer.querySelectorAll("[data-delete]").forEach(button => button.addEventListener("click",()=>{
@@ -176,6 +184,9 @@
             layer.remove();render();characterSheet();
           }
         }));
+        $("#backup-character",layer).addEventListener("click",backupCharacter);
+        $("#restore-character",layer).addEventListener("click",()=>$("#backup-file",layer).click());
+        $("#backup-file",layer).addEventListener("change",event=>restoreCharacter(event,layer));
         $("#new-character",layer).addEventListener("click",()=>newCharacter(layer));
       };
       const newCharacter = previous => {
@@ -206,6 +217,60 @@
         form.querySelectorAll('input[type="number"]').forEach(input=>input.addEventListener("input",check));
         $(".close",layer).addEventListener("click",()=>layer.remove());
         form.addEventListener("submit",event=>{event.preventDefault();const value=amount();if(!value||(type==="expense"&&value>character.balance))return;character.transactions.unshift({id:id(),type,amount:value,note:form.elements.note.value.trim()||(type==="income"?"Einnahme":"Ausgabe"),createdAt:new Date().toISOString()});character.balance+=type==="income"?value:-value;layer.remove();render()});
+      };
+      const backupCharacter = () => {
+        const character=active();
+        const payload={
+          format:"altdorf-geldbeutel-charakter",
+          version:1,
+          createdAt:new Date().toISOString(),
+          character:{
+            name:character.name,
+            career:character.career,
+            balance:character.balance,
+            transactions:character.transactions
+          }
+        };
+        const safeName=character.name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase()||"charakter";
+        const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+        const url=URL.createObjectURL(blob);
+        const link=document.createElement("a");
+        link.href=url;
+        link.download=`${safeName}-geldbeutel.json`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+      };
+      const restoreCharacter = async (event,layer) => {
+        const file=event.target.files?.[0];
+        if(!file)return;
+        try{
+          const payload=JSON.parse(await file.text());
+          const source=payload?.character;
+          if(payload?.format!=="altdorf-geldbeutel-charakter"||payload?.version!==1||!source)throw new Error("Unbekanntes Sicherungsformat");
+          if(typeof source.name!=="string"||!source.name.trim()||source.name.length>80)throw new Error("Ungültiger Charaktername");
+          if(typeof source.career!=="string"||source.career.length>100)throw new Error("Ungültige Laufbahn");
+          if(!Number.isSafeInteger(source.balance)||source.balance<0)throw new Error("Ungültiger Münzstand");
+          if(!Array.isArray(source.transactions)||source.transactions.length>10000)throw new Error("Ungültiges Münzbuch");
+          const transactions=source.transactions.map(item=>{
+            if(!item||!["income","expense"].includes(item.type)||!Number.isSafeInteger(item.amount)||item.amount<=0)throw new Error("Fehlerhafte Buchung");
+            const createdAt=new Date(item.createdAt);
+            if(Number.isNaN(createdAt.getTime()))throw new Error("Fehlerhaftes Datum");
+            return{id:id(),type:item.type,amount:item.amount,note:String(item.note||"Buchung").slice(0,300),createdAt:createdAt.toISOString()};
+          });
+          const restored={id:id(),name:source.name.trim(),career:source.career.trim()||"Abenteurer",balance:source.balance,transactions};
+          state.characters.push(restored);
+          state.activeId=restored.id;
+          persist();
+          layer.remove();
+          render();
+          alert(`${restored.name} wurde aus der Sicherung wiederhergestellt.`);
+        }catch(error){
+          alert(`Die Sicherung konnte nicht gelesen werden: ${error.message}`);
+        }finally{
+          event.target.value="";
+        }
       };
       const undo = transactionId => {
         const character=active();const transaction=character.transactions.find(item=>item.id===transactionId);if(!transaction)return;

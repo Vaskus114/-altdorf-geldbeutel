@@ -1,4 +1,4 @@
-const CACHE = "altdorf-geldbeutel-v2";
+const CACHE = "altdorf-geldbeutel-v3";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./wallet-icon.svg"];
 
 self.addEventListener("install", event => {

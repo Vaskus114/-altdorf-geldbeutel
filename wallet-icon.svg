@@ -1,8 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="110" fill="#241b17"/>
-  <path d="M88 169c0-35 28-63 63-63h212c34 0 61 25 64 58l12 216c2 24-17 44-41 44H114c-24 0-43-20-41-44l15-211Z" fill="#67302c" stroke="#c49a4b" stroke-width="18"/>
-  <path d="M112 165h288" stroke="#d7b96e" stroke-width="20" stroke-linecap="round"/>
-  <circle cx="256" cy="280" r="76" fill="#c49a4b" stroke="#7d5728" stroke-width="16"/>
-  <circle cx="256" cy="280" r="48" fill="none" stroke="#765126" stroke-width="7"/>
-  <text x="256" y="302" fill="#39251b" font-family="Georgia,serif" font-size="67" font-weight="700" text-anchor="middle">GK</text>
+  <rect width="512" height="512" rx="54" fill="#0c0b09"/>
+  <path d="M84 171 113 103l292 16 27 278-37 34-295-19-30-47 14-194Z" fill="#4b1b1c" stroke="#796344" stroke-width="18"/>
+  <path d="m104 153 307 15M92 373l321 19" stroke="#a5844d" stroke-width="15"/>
+  <path d="m120 128 19 38m224-45 21 46M102 361l30 54m241-35 26 43" stroke="#2a2119" stroke-width="14"/>
+  <circle cx="256" cy="276" r="80" fill="#8d6a31" stroke="#3d2b18" stroke-width="18"/>
+  <path d="m202 221 104 110m-96-8 92-102" stroke="#4b351e" stroke-width="8" opacity=".55"/>
+  <circle cx="256" cy="276" r="52" fill="none" stroke="#3f2b18" stroke-width="7"/>
+  <text x="256" y="299" fill="#21170f" font-family="Georgia,serif" font-size="67" font-weight="700" text-anchor="middle">GK</text>
 </svg>

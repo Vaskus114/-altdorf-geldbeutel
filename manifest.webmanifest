@@ -5,8 +5,8 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#171312",
-  "theme_color": "#3e1d1c",
+  "background_color": "#080807",
+  "theme_color": "#0d0c0a",
   "icons": [
     {
       "src": "./wallet-icon.svg",
