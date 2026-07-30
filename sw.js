@@ -1,4 +1,4 @@
-const CACHE = "altdorf-geldbeutel-v4";
+const CACHE = "altdorf-geldbeutel-v5";
 const FILES = [
   "./",
   "./index.html",
@@ -8,7 +8,12 @@ const FILES = [
   "./coin-silver.png",
   "./coin-brass.png",
   "./parchment.webp",
-  "./dark-leather.webp"
+  "./dark-leather.webp",
+  "./button-income.webp",
+  "./button-expense.webp",
+  "./cinzel-decorative-700.woff2",
+  "./im-fell-english-400.woff2",
+  "./im-fell-english-italic.woff2"
 ];
 
 self.addEventListener("install", event => {
