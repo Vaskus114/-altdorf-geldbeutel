@@ -9,6 +9,7 @@ Eine installierbare Offline-Web-App zur Verwaltung mehrerer Charakter-Geldbeutel
 - automatische Umrechnung und Wechselgeld
 - Einnahmen, Ausgaben und Buchungsverlauf
 - Backup und Wiederherstellung einzelner Charaktere
+- eigens erstellte, abgenutzte Münzgrafiken und Materialtexturen
 - lokale Speicherung auf dem jeweiligen Gerät
 - offline nutzbar und auf iPhone sowie Android installierbar
 

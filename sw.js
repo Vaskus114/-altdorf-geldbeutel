@@ -1,5 +1,15 @@
-const CACHE = "altdorf-geldbeutel-v3";
-const FILES = ["./", "./index.html", "./manifest.webmanifest", "./wallet-icon.svg"];
+const CACHE = "altdorf-geldbeutel-v4";
+const FILES = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./wallet-icon.svg",
+  "./coin-gold.png",
+  "./coin-silver.png",
+  "./coin-brass.png",
+  "./parchment.webp",
+  "./dark-leather.webp"
+];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
