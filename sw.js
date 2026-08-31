@@ -1,7 +1,10 @@
-const CACHE = "altdorf-geldbeutel-v6";
+const CACHE = "altdorf-geldbeutel-core-v8";
 const FILES = [
   "./",
   "./index.html",
+  "./styles.css",
+  "./app.js",
+  "./wfrp1e-data.js",
   "./manifest.webmanifest",
   "./wallet-icon.svg",
   "./coin-gold.png",
@@ -22,9 +25,7 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener("activate", event => {
-  event.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))
-  ));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))));
   self.clients.claim();
 });
 

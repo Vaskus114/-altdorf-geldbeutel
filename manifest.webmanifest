@@ -1,18 +1,12 @@
 {
-  "name": "Altdorfer Geldbeutel",
+  "name": "Altdorfer Geldbeutel – WFRP 1E",
   "short_name": "Geldbeutel",
-  "description": "Verwalte die Münzen deiner Warhammer-Fantasy-Charaktere.",
+  "description": "Offline-Charaktermanager, Geldbeutel und Lagerverwaltung für Warhammer Fantasy Roleplay 1. Edition",
   "start_url": "./",
-  "scope": "./",
   "display": "standalone",
-  "background_color": "#080807",
+  "background_color": "#0d0c0a",
   "theme_color": "#0d0c0a",
   "icons": [
-    {
-      "src": "./wallet-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    {"src":"./wallet-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
   ]
 }
