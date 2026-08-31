@@ -64,3 +64,11 @@
 - LocalStorage-Key auf `altdorf-geldbeutel-v9`, Backup-Format auf v8 und Service-Worker-Cache auf `altdorf-geldbeutel-core-v12` angehoben.
 
 > Hinweis: Frühere Abschnitte in diesem Änderungsprotokoll dokumentieren Zwischenstände. Die aktuelle verbindliche Logik ist der Abschnitt **EP-Advances und Talentboni**: Advanced ist nur das Scheme; Current verwendet ausschließlich Start + gekaufte Advances + Skill/Talent-Boni.
+
+
+## Profil-Responsive-Fix
+- Der Profil-Tab nutzt die volle Breite des Charakterbogens.
+- Die große Start/Advanced/Current-Tabelle wird auf Tablet und Smartphone automatisch durch kompakte Profilkarten ersetzt.
+- Lange Namen, Karriere-Historien und Merkmale brechen sauber um statt aus den Boxen zu laufen.
+- Das Bearbeitungsfenster für Charakteristika ist jetzt ein responsives Kartenraster statt einer überbreiten Tabelle.
+- Tabs und Kopfzeilen sind auf kleinen Displays scrollbar bzw. zweispaltig angeordnet.

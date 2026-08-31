@@ -421,9 +421,16 @@
       const title=mod.details.map(item=>`${item.name} ${signed(item.amount)}`).join(" · ");
       return `<span class="current-stat-value"${title?` title="${escapeHtml(title)}"`:""}>${statValue(character,stat.key)}${mod.total?`<sup class="profile-skill-star" aria-label="Skill-/Talentbonus">*</sup>`:""}</span>`;
     };
+    const compactCards=RULES.characteristics.map(stat=>{
+      const mod=skillProfileModifier(character,stat.key);
+      const start=num(character.sheet.stats[stat.key]?.base,0);
+      const advanced=num(character.sheet.stats[stat.key]?.advance,0);
+      const title=mod.details.map(item=>`${item.name} ${signed(item.amount)}`).join(" · ");
+      return `<article class="profile-stat-card"><header><strong>${escapeHtml(stat.key)}</strong><small>${escapeHtml(stat.label)}</small></header><dl><div><dt>Start</dt><dd>${start}</dd></div><div><dt>Advanced</dt><dd>${advanced?signed(advanced):"0"}</dd></div><div class="current"><dt>Current</dt><dd${title?` title="${escapeHtml(title)}"`:""}>${statValue(character,stat.key)}${mod.total?`<sup class="profile-skill-star" aria-label="Skill-/Talentbonus">*</sup>`:""}</dd></div></dl></article>`;
+    }).join("");
     const bought=(RULES.characteristics||[]).filter(stat=>purchasedAdvance(character,stat.key)>0).map(stat=>`${stat.key} ${signed(purchasedAdvance(character,stat.key))}`).join(" · ");
     const skillMods=(RULES.characteristics||[]).map(stat=>{const mod=skillProfileModifier(character,stat.key);return mod.total?`${stat.key} ${signed(mod.total)} (${mod.details.map(x=>x.name).join(", ")})`:""}).filter(Boolean).join(" · ");
-    return `<div class="profile-table-wrap"><table class="profile-table"><thead><tr><th scope="col">Profil</th>${header}</tr></thead><tbody>${row("Start",stat=>num(character.sheet.stats[stat.key]?.base,0),"profile-start-row")}${row("Advanced",stat=>{const value=num(character.sheet.stats[stat.key]?.advance,0);return value?signed(value):"0"},"profile-advanced-row")}${row("Current",currentCell,"profile-current-row")}</tbody></table></div><div class="profile-calculation-note"><span><strong>Gekauft:</strong> ${bought||"noch keine Advances"}</span>${skillMods?`<span><strong>* Skill/Talent:</strong> ${escapeHtml(skillMods)}</span>`:""}</div>`;
+    return `<div class="profile-table-wrap"><table class="profile-table"><thead><tr><th scope="col">Profil</th>${header}</tr></thead><tbody>${row("Start",stat=>num(character.sheet.stats[stat.key]?.base,0),"profile-start-row")}${row("Advanced",stat=>{const value=num(character.sheet.stats[stat.key]?.advance,0);return value?signed(value):"0"},"profile-advanced-row")}${row("Current",currentCell,"profile-current-row")}</tbody></table></div><div class="profile-compact-grid" aria-label="Profilwerte">${compactCards}</div><div class="profile-calculation-note"><span><strong>Gekauft:</strong> ${bought||"noch keine Advances"}</span>${skillMods?`<span><strong>* Skill/Talent:</strong> ${escapeHtml(skillMods)}</span>`:""}</div>`;
   };
   const resourceCards = character => {
     const r=character.sheet.resources;
@@ -519,12 +526,12 @@
   };
   const editStats = (previous,returnTab) => {
     const character=active();
-    const header=RULES.characteristics.map(stat=>`<th scope="col"><span>${escapeHtml(stat.key)}</span><small>${escapeHtml(stat.label)}</small></th>`).join("");
-    const startInputs=RULES.characteristics.map(stat=>`<td><input name="${stat.key}-base" type="number" step="1" value="${num(character.sheet.stats[stat.key]?.base,0)}" aria-label="${stat.key} Start"></td>`).join("");
-    const advancedInputs=RULES.characteristics.map(stat=>`<td><input name="${stat.key}-advance" type="number" step="1" min="0" value="${num(character.sheet.stats[stat.key]?.advance,0)}" aria-label="${stat.key} Advanced"></td>`).join("");
-    const currentOutputs=RULES.characteristics.map(stat=>{const mod=skillProfileModifier(character,stat.key);return `<td><output class="profile-current-output" data-current-stat="${stat.key}">${statValue(character,stat.key)}${mod.total?"*":""}</output></td>`}).join("");
     const bought=(RULES.characteristics||[]).filter(stat=>purchasedAdvance(character,stat.key)>0).map(stat=>`${stat.key} ${signed(purchasedAdvance(character,stat.key))}`).join(" · ");
-    const layer=modal(`<form class="sheet form stat-profile-form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Profilwerte</span><h2>Charakteristika</h2></div><button type="button" class="close">×</button></div><div class="profile-table-wrap edit-profile-table-wrap"><table class="profile-table profile-edit-table"><thead><tr><th scope="col">Profil</th>${header}</tr></thead><tbody><tr class="profile-start-row"><th scope="row">Start</th>${startInputs}</tr><tr class="profile-advanced-row"><th scope="row">Advanced</th>${advancedInputs}</tr><tr class="profile-current-row"><th scope="row">Current</th>${currentOutputs}</tr></tbody></table></div><div class="profile-calculation-note"><span><strong>Gekaufte Advances:</strong> ${bought||"noch keine"}</span><span><strong>*</strong> kennzeichnet einen eingerechneten Skill-/Talentbonus.</span></div><p class="hint"><strong>Start</strong> = Werte aus der Charaktererschaffung. <strong>Advanced</strong> = maximal kaufbare Werte aus dem Scheme der aktuellen Karriere und frei editierbar. <strong>Current</strong> = Start + tatsächlich gekaufte Advances + Profilboni aus Skills/Talenten. Advanced selbst wird nicht auf Current addiert.</p><button class="full-button">Werte speichern</button></form>`);
+    const cards=RULES.characteristics.map(stat=>{
+      const mod=skillProfileModifier(character,stat.key);
+      return `<article class="profile-edit-card"><header><strong>${escapeHtml(stat.key)}</strong><small>${escapeHtml(stat.label)}</small></header><label>Start<input name="${stat.key}-base" type="number" step="1" value="${num(character.sheet.stats[stat.key]?.base,0)}" aria-label="${stat.key} Start"></label><label>Advanced<input name="${stat.key}-advance" type="number" step="1" min="0" value="${num(character.sheet.stats[stat.key]?.advance,0)}" aria-label="${stat.key} Advanced"></label><div class="profile-edit-current"><small>Current</small><output class="profile-current-output" data-current-stat="${stat.key}">${statValue(character,stat.key)}${mod.total?"*":""}</output></div></article>`;
+    }).join("");
+    const layer=modal(`<form class="sheet form stat-profile-form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Profilwerte</span><h2>Charakteristika</h2></div><button type="button" class="close">×</button></div><div class="profile-edit-grid">${cards}</div><div class="profile-calculation-note"><span><strong>Gekaufte Advances:</strong> ${bought||"noch keine"}</span><span><strong>*</strong> kennzeichnet einen eingerechneten Skill-/Talentbonus.</span></div><p class="hint"><strong>Start</strong> = Werte aus der Charaktererschaffung. <strong>Advanced</strong> = maximal kaufbare Werte aus dem Scheme der aktuellen Karriere und frei editierbar. <strong>Current</strong> = Start + tatsächlich gekaufte Advances + Profilboni aus Skills/Talenten. Advanced selbst wird nicht auf Current addiert.</p><button class="full-button">Werte speichern</button></form>`);
     layer.classList.add("high");
     const form=$("form",layer);
     const refreshCurrent=()=>RULES.characteristics.forEach(stat=>{
@@ -534,7 +541,7 @@
       const output=$(`[data-current-stat="${stat.key}"]`,form);
       if(output) output.textContent=String(start+bought+modifier)+(modifier?"*":"");
     });
-    $$('.profile-start-row input',form).forEach(input=>input.addEventListener("input",refreshCurrent));
+    $$('[name$="-base"]',form).forEach(input=>input.addEventListener("input",refreshCurrent));
     $(".close",layer).addEventListener("click",()=>layer.remove());
     form.addEventListener("submit",event=>{
       event.preventDefault();

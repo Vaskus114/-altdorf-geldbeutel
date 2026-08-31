@@ -65,3 +65,7 @@ Ein Wert aus **Advanced** erhöht Current also **nicht automatisch**. Jeder regu
 Profilverändernde Core-Skills/Talente werden automatisch berücksichtigt. Hinterlegt sind insbesondere **Fleet Footed (M +1)**, **Lightning Reflexes (I +10)**, **Very Resilient (T +1)** und **Very Strong (S +1)**. **Strongman** gibt automatisch S +1; der variable D4-Wundenbonus kann im Skill-Editor beim W-Bonus eingetragen werden. Sobald ein Skill/Talent in Current eingerechnet wird, erscheint am betreffenden Current-Wert ein `*`.
 
 Beim Karrierewechsel bleibt die Summe der bereits gekauften Advances erhalten. Das neue Advanced-Schema bestimmt nur, ob noch weitere Advances gekauft werden dürfen; die Schemata werden nicht aufeinander addiert.
+
+
+## Responsive Profilanzeige
+Der Profilbereich passt sich jetzt an Desktop, Tablet und Smartphone an. Auf breiten Bildschirmen bleibt die klassische Tabellenansicht erhalten; auf kleineren Displays werden die Charakteristika automatisch als kompakte Start/Advanced/Current-Karten dargestellt.
