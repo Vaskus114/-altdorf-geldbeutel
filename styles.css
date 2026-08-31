@@ -111,3 +111,33 @@
 @media(max-width:760px){.career-scheme-box .scheme-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.career-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet-watermark{font-size:30px;max-width:240px}}
 @media(max-width:520px){.career-scheme-box .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.career-skill-row,.career-history-row{grid-template-columns:1fr}.career-summary{grid-template-columns:1fr}.sheet-watermark{font-size:23px;max-width:170px}}
 .career-history-scheme{display:block;margin-top:5px;color:#493b2e;font-size:10px;line-height:1.35;font-style:italic}
+
+/* Profilwerte: Start / Advanced / Current wie auf dem klassischen Charakterbogen */
+.profile-table-wrap{width:100%;overflow-x:auto;border:1px solid rgba(66,50,34,.55);background:rgba(255,255,255,.10)}
+.profile-table{width:100%;min-width:1040px;border-collapse:collapse;table-layout:fixed;color:#1d140f}
+.profile-table th,.profile-table td{border-right:1px solid rgba(70,54,37,.48);border-bottom:1px solid rgba(70,54,37,.48);text-align:center;vertical-align:middle}
+.profile-table tr:last-child th,.profile-table tr:last-child td{border-bottom:0}.profile-table th:last-child,.profile-table td:last-child{border-right:0}
+.profile-table thead th{padding:6px 4px;background:rgba(63,48,33,.12);font-family:"Cinzel Decorative",Georgia,serif;font-size:11px;font-weight:700}
+.profile-table thead th:first-child{width:96px;text-transform:uppercase;letter-spacing:.06em}
+.profile-table thead th span{display:block;font-size:13px;line-height:1}.profile-table thead th small{display:block;margin-top:4px;color:#6b5a48;font-family:"IM Fell English",Georgia,serif;font-size:7px;font-weight:400;line-height:1.05;letter-spacing:.02em;text-transform:none}
+.profile-table tbody th{width:96px;padding:10px 7px;background:rgba(66,51,35,.10);font-family:"Cinzel Decorative",Georgia,serif;font-size:10px;letter-spacing:.04em;text-align:left}
+.profile-table tbody td{height:45px;padding:7px 4px;font-family:"Cinzel Decorative",Georgia,serif;font-size:17px;background:rgba(255,255,255,.13)}
+.profile-table .profile-start-row td{background:rgba(255,255,255,.17)}
+.profile-table .profile-advanced-row td{background:rgba(111,85,55,.08)}
+.profile-table .profile-current-row th,.profile-table .profile-current-row td{background:rgba(55,43,31,.13);font-weight:700}
+.profile-table .profile-current-row td{font-size:19px}
+.profile-edit-table td{padding:4px}.profile-edit-table input{width:100%;min-width:48px;min-height:38px!important;padding:4px!important;border:1px solid rgba(72,54,36,.45)!important;background:rgba(255,255,255,.36)!important;color:#1d140f!important;text-align:center;font-size:15px!important;box-shadow:none!important}
+.profile-current-output{display:grid;place-items:center;min-height:38px;font-family:"Cinzel Decorative",Georgia,serif;font-size:18px}
+.stat-profile-form{width:min(100%,1180px)}
+@media(max-width:560px){.profile-table{min-width:930px}.profile-table thead th:first-child,.profile-table tbody th{width:82px}.profile-table tbody td{height:42px;font-size:15px}.profile-table .profile-current-row td{font-size:17px}}
+
+/* EP-Advances & profilverändernde Skills/Talente */
+.current-stat-value{display:inline-flex;align-items:flex-start;justify-content:center;gap:1px;white-space:nowrap}
+.profile-skill-star{position:relative;top:-.12em;margin-left:1px;color:#6a241e;font-family:"IM Fell English",Georgia,serif;font-size:.72em;line-height:1}
+.profile-calculation-note{display:flex;flex-wrap:wrap;gap:7px 16px;margin-top:8px;padding:8px 10px;border:1px solid rgba(70,54,37,.35);background:rgba(255,255,255,.10);color:#5e4e40;font-size:10px;line-height:1.35}
+.profile-calculation-note strong{color:#2b2017}
+.profile-bonus-editor{margin:12px 0;padding:9px 10px;border:1px solid rgba(70,54,37,.42);background:rgba(255,255,255,.10)}
+.profile-bonus-editor summary{cursor:pointer;font-family:"Cinzel Decorative",Georgia,serif;font-size:11px;color:#2a1e15}
+.profile-bonus-editor[open] summary{margin-bottom:8px}
+.career-scheme-box .scheme-card .mini-button{margin-top:auto}
+.career-scheme-box .scheme-card span{min-height:26px}

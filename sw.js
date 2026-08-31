@@ -1,4 +1,4 @@
-const CACHE = "altdorf-geldbeutel-core-v11-all-careers";
+const CACHE = "altdorf-geldbeutel-core-v12";
 const FILES = [
   "./",
   "./index.html",
@@ -20,7 +20,15 @@ const FILES = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await Promise.all(FILES.map(async file => {
+      try {
+        const response = await fetch(file, {cache:"reload"});
+        if (response.ok) await cache.put(file, response);
+      } catch (_) {}
+    }));
+  })());
   self.skipWaiting();
 });
 

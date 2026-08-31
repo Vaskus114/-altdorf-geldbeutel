@@ -2,8 +2,8 @@
   "use strict";
 
   const RULES = window.WFRP1E || {locations:["head","rightArm","leftArm","body","rightLeg","leftLeg"],characteristics:[],advanceableCharacteristics:[],careers:{basic:[],advanced:[]},careerDetails:{},careerOptions:[],skills:[],armourPresets:[],weaponPresets:[],equipmentPresets:[],spellPresets:[],allowedLayerPairs:[],rules:{advanceCost:100,skillCost:100,spellArmourCostPerPoint:2,specialistUntrainedValue:10}};
-  const KEY = "altdorf-geldbeutel-v6";
-  const OLD_KEYS = ["altdorf-geldbeutel-v5","altdorf-geldbeutel-v4","altdorf-geldbeutel-v3","altdorf-geldbeutel-v2","altdorf-geldbeutel-v1"];
+  const KEY = "altdorf-geldbeutel-v9";
+  const OLD_KEYS = ["altdorf-geldbeutel-v8","altdorf-geldbeutel-v7","altdorf-geldbeutel-v6","altdorf-geldbeutel-v5","altdorf-geldbeutel-v4","altdorf-geldbeutel-v3","altdorf-geldbeutel-v2","altdorf-geldbeutel-v1"];
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const id = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -68,12 +68,17 @@
     weapon:sanitizeWeapon(item?.weapon)
   });
 
-  const defaultStats = () => Object.fromEntries(RULES.characteristics.map(stat=>[stat.key,{base:0,advance:0,manual:0}]));
+  const defaultStats = () => Object.fromEntries(RULES.characteristics.map(stat=>[stat.key,{base:0,advance:0,purchased:0,manual:0}]));
   const sanitizeStats = stats => {
     const next=defaultStats();
     RULES.characteristics.forEach(stat=>{
       const source=stats?.[stat.key]||{};
-      next[stat.key]={base:num(source.base,0),advance:num(source.advance,0),manual:num(source.manual,0)};
+      next[stat.key]={
+        base:num(source.base,0),
+        advance:num(source.advance,0),
+        purchased:Math.max(0,num(source.purchased,0)),
+        manual:num(source.manual,0)
+      };
     });
     return next;
   };
@@ -100,12 +105,40 @@
     career:{name:"Abenteurer",presetId:"",type:"custom",scheme:emptyScheme(),notes:"",freeAdvanceUsed:false},
     careerHistory:[],
     careerMeta:{initialAdvanceUsed:false,careerChanges:0},
+    profileMeta:{schemeSyncedPreset:""},
     magic:{armourPointOverride:""},
     armourManual:emptyArmour(),
     skills:[],
     spells:[]
   });
-  const sanitizeSkill = skill => ({id:skill?.id||id(),name:String(skill?.name||"Fertigkeit").slice(0,120),attribute:String(skill?.attribute||"").slice(0,50),note:String(skill?.note||"").slice(0,1000),source:skill?.source==="core"?"core":"custom"});
+  const emptyProfileBonuses = () => Object.fromEntries(RULES.characteristics.map(stat=>[stat.key,0]));
+  const defaultSkillProfileBonuses = name => {
+    const bonuses=emptyProfileBonuses();
+    const key=String(name||"").trim().toLowerCase();
+    if(key==="fleet footed") bonuses.M=1;
+    if(key==="lightning reflexes") bonuses.I=10;
+    if(key==="very resilient") bonuses.T=1;
+    if(key==="very strong") bonuses.S=1;
+    if(key==="strongman") bonuses.S=1;
+    return bonuses;
+  };
+  const sanitizeProfileBonuses = (bonuses,name="") => {
+    const defaults=defaultSkillProfileBonuses(name);
+    const out=emptyProfileBonuses();
+    RULES.characteristics.forEach(stat=>{
+      const supplied=bonuses && Object.prototype.hasOwnProperty.call(bonuses,stat.key);
+      out[stat.key]=num(supplied?bonuses[stat.key]:defaults[stat.key],0);
+    });
+    return out;
+  };
+  const sanitizeSkill = skill => ({
+    id:skill?.id||id(),
+    name:String(skill?.name||"Fertigkeit").slice(0,120),
+    attribute:String(skill?.attribute||"").slice(0,50),
+    note:String(skill?.note||"").slice(0,1000),
+    source:skill?.source==="core"?"core":"custom",
+    profileBonuses:sanitizeProfileBonuses(skill?.profileBonuses,skill?.name)
+  });
   const sanitizeSpell = spell => ({
     id:spell?.id||id(),presetId:String(spell?.presetId||"").slice(0,120),source:spell?.source==="core"?"core":"custom",school:String(spell?.school||"").slice(0,100),name:String(spell?.name||"Zauber").slice(0,160),level:String(spell?.level??"").slice(0,30),magicPoints:Math.max(0,Math.min(999,num(spell?.magicPoints,0))),costVerified:Boolean(spell?.costVerified ?? (num(spell?.magicPoints,0)>0)),range:String(spell?.range||"").slice(0,120),duration:String(spell?.duration||"").slice(0,120),ingredients:String(spell?.ingredients||"").slice(0,500),description:String(spell?.description||spell?.note||"").slice(0,3000),active:Boolean(spell?.active),armourBonus:Math.max(-20,Math.min(20,num(spell?.armourBonus,0)))
   });
@@ -123,6 +156,7 @@
     base.careerHistory=Array.isArray(sheet?.careerHistory)?sheet.careerHistory.slice(0,30).map(sanitizeCareerRecord):[];
     const legacyFreeUsed=Boolean(career.freeAdvanceUsed)||base.careerHistory.some(entry=>entry.freeAdvanceUsed);
     base.careerMeta={initialAdvanceUsed:Boolean(sheet?.careerMeta?.initialAdvanceUsed ?? legacyFreeUsed),careerChanges:Math.max(0,int(sheet?.careerMeta?.careerChanges,base.careerHistory.length))};
+    base.profileMeta={schemeSyncedPreset:String(sheet?.profileMeta?.schemeSyncedPreset||"").slice(0,160)};
     base.magic={armourPointOverride:sheet?.magic?.armourPointOverride===""||sheet?.magic?.armourPointOverride==null?"":Math.max(0,num(sheet.magic.armourPointOverride,0))};
     base.armourManual=Object.fromEntries(RULES.locations.map(location=>[location,Math.max(-20,Math.min(20,num(sheet?.armourManual?.[location],0))) ]));
     base.skills=Array.isArray(sheet?.skills)?sheet.skills.slice(0,500).map(sanitizeSkill):[];
@@ -164,10 +198,23 @@
 
   const persist = () => localStorage.setItem(KEY, JSON.stringify(state));
   const active = () => state.characters.find(character => character.id === state.activeId) || state.characters[0];
-  const statValue = (character,key) => {
-    const stat=character.sheet.stats[key]||{base:0,advance:0,manual:0};
-    return num(stat.base)+num(stat.advance)+num(stat.manual);
+  const skillProfileModifier = (character,key) => {
+    const details=[];
+    let total=0;
+    (character.sheet.skills||[]).forEach(skill=>{
+      const amount=num(skill?.profileBonuses?.[key],0);
+      if(!amount) return;
+      total+=amount;
+      details.push({name:skill.name,amount});
+    });
+    return {total,details};
   };
+  const statValue = (character,key) => {
+    const stat=character.sheet.stats[key]||{base:0,advance:0,purchased:0,manual:0};
+    return num(stat.base)+num(stat.purchased)+skillProfileModifier(character,key).total;
+  };
+  const advanceStep = key => ["M","S","T","W","A"].includes(key)?1:10;
+  const purchasedAdvance = (character,key) => Math.max(0,num(character.sheet.stats?.[key]?.purchased,0));
   const woundsMax = character => Math.max(0,statValue(character,"W"));
   const carryingCapacity = character => Math.max(0,statValue(character,"S")*100);
   const itemEnc = item => (Number(item.enc)||0)*(Number(item.quantity)||1);
@@ -252,6 +299,7 @@
   };
   const render = () => {
     const character = ensureCharacter(active());
+    syncAdvancedFromCareerScheme(character,currentCareerRecord(character),false);
     const coins = splitCoins(character.balance);
     $("#active-avatar").textContent = character.name.charAt(0).toUpperCase();
     $("#active-name").textContent = character.name;
@@ -312,6 +360,18 @@
     const hasOwn=(RULES.advanceableCharacteristics||[]).some(key=>num(own[key],0)>0);
     return sanitizeCareerScheme(hasOwn?own:careerDefinition(record)?.scheme);
   };
+  const syncAdvancedFromCareerScheme = (character,record=currentCareerRecord(character),force=false) => {
+    const scheme=mergedCareerScheme(record);
+    const preset=String(record?.presetId||record?.name||"");
+    character.sheet.profileMeta=character.sheet.profileMeta||{schemeSyncedPreset:""};
+    if(!force && character.sheet.profileMeta.schemeSyncedPreset===preset) return scheme;
+    RULES.characteristics.forEach(stat=>{
+      const row=character.sheet.stats[stat.key]||(character.sheet.stats[stat.key]={base:0,advance:0,purchased:0,manual:0});
+      row.advance=num(scheme?.[stat.key],0);
+    });
+    character.sheet.profileMeta.schemeSyncedPreset=preset;
+    return scheme;
+  };
   const careerSkills = record => Array.isArray(careerDefinition(record)?.skills)?careerDefinition(record).skills:[];
   const learnedSkillNames = character => new Set(character.sheet.skills.map(skill=>skill.name));
   const applyCareerRecord = (character,record,{archiveCurrent=true}={}) => {
@@ -327,6 +387,7 @@
     if(!(RULES.advanceableCharacteristics||[]).some(key=>num(next.scheme?.[key],0)>0)) next.scheme=mergedCareerScheme(next);
     character.sheet.career=next;
     character.career=next.name;
+    syncAdvancedFromCareerScheme(character,next,true);
     return true;
   };
   const restoreCareerFromHistory = (index,previous) => {
@@ -338,6 +399,7 @@
     character.sheet.career=picked;
     character.sheet.career.scheme=mergedCareerScheme(character.sheet.career);
     character.career=character.sheet.career.name||"Abenteurer";
+    syncAdvancedFromCareerScheme(character,character.sheet.career,true);
     persist();previous.remove();render();characterSheet("career");
   };
   const learnCareerSkill = (skillName,previous,note="") => {
@@ -349,9 +411,19 @@
     character.sheet.skills.push(sanitizeSkill({name,source:"core",note:note||`Karriere-Skill · ${character.career}`}));
     persist();previous.remove();render();characterSheet("career");
   };
-  const statCard = (character,stat) => {
-    const data=character.sheet.stats[stat.key],total=statValue(character,stat.key);
-    return `<article class="stat-card"><header><small>${escapeHtml(stat.key)}</small><strong>${total}</strong></header><dl><div><dt>G</dt><dd>${num(data.base)}</dd></div><div><dt>A</dt><dd>${signed(num(data.advance))}</dd></div><div><dt>M</dt><dd>${signed(num(data.manual))}</dd></div></dl></article>`;
+  const statProfileTable = character => {
+    const current=currentCareerRecord(character);
+    syncAdvancedFromCareerScheme(character,current,false);
+    const header=RULES.characteristics.map(stat=>`<th scope="col"><span>${escapeHtml(stat.key)}</span><small>${escapeHtml(stat.label)}</small></th>`).join("");
+    const row=(labelName,getValue,className="")=>`<tr class="${className}"><th scope="row">${labelName}</th>${RULES.characteristics.map(stat=>`<td>${getValue(stat)}</td>`).join("")}</tr>`;
+    const currentCell=stat=>{
+      const mod=skillProfileModifier(character,stat.key);
+      const title=mod.details.map(item=>`${item.name} ${signed(item.amount)}`).join(" · ");
+      return `<span class="current-stat-value"${title?` title="${escapeHtml(title)}"`:""}>${statValue(character,stat.key)}${mod.total?`<sup class="profile-skill-star" aria-label="Skill-/Talentbonus">*</sup>`:""}</span>`;
+    };
+    const bought=(RULES.characteristics||[]).filter(stat=>purchasedAdvance(character,stat.key)>0).map(stat=>`${stat.key} ${signed(purchasedAdvance(character,stat.key))}`).join(" · ");
+    const skillMods=(RULES.characteristics||[]).map(stat=>{const mod=skillProfileModifier(character,stat.key);return mod.total?`${stat.key} ${signed(mod.total)} (${mod.details.map(x=>x.name).join(", ")})`:""}).filter(Boolean).join(" · ");
+    return `<div class="profile-table-wrap"><table class="profile-table"><thead><tr><th scope="col">Profil</th>${header}</tr></thead><tbody>${row("Start",stat=>num(character.sheet.stats[stat.key]?.base,0),"profile-start-row")}${row("Advanced",stat=>{const value=num(character.sheet.stats[stat.key]?.advance,0);return value?signed(value):"0"},"profile-advanced-row")}${row("Current",currentCell,"profile-current-row")}</tbody></table></div><div class="profile-calculation-note"><span><strong>Gekauft:</strong> ${bought||"noch keine Advances"}</span>${skillMods?`<span><strong>* Skill/Talent:</strong> ${escapeHtml(skillMods)}</span>`:""}</div>`;
   };
   const resourceCards = character => {
     const r=character.sheet.resources;
@@ -361,16 +433,17 @@
     const i=character.sheet.identity,current=currentCareerRecord(character),history=careerHistory(character).map(entry=>entry.name).filter(Boolean);
     const meta=`<div class="sheet-meta-strip"><span><b>Name:</b> ${escapeHtml(character.name)}</span><span><b>Karriere:</b> ${escapeHtml(current.name)}</span><span><b>Volk:</b> ${escapeHtml(i.race||"—")}</span></div>`;
     const grid=`<div class="profile-facts">${[profileCell("Karriere",current.name),profileCell("Volk",i.race),profileCell("Geschlecht",i.sex),profileCell("Alter",i.age),profileCell("Größe",i.height),profileCell("Gewicht",i.weight),profileCell("Gesinnung",i.alignment),profileCell("Geburtsort",i.birthplace),profileCell("Augen",i.eyes),profileCell("Haare",i.hair),profileCell("Karriere-Historie",history.join(", "),"wide"),profileCell("Freitext frühere Karrieren",i.previousCareers,"wide"),profileCell("Besondere Merkmale",i.marks,"wide")].join("")}</div>${i.notes?`<p class="character-note">${escapeHtml(i.notes)}</p>`:""}`;
-    return `${sheetBox("Charakter",escapeHtml(character.name),`<button class="mini-button" id="edit-profile">Bearbeiten</button>`,`${meta}${grid}`,"identity-box")}${sheetBox("Charakteristika","Profilwerte",`<button class="mini-button" id="edit-stats">Bearbeiten</button>`,`<div class="stat-grid">${RULES.characteristics.map(stat=>statCard(character,stat)).join("")}</div>`,"stats-box")}${sheetBox("Ressourcen","Wunden, Schicksal & Magie",`<button class="mini-button" id="edit-resources">Bearbeiten</button>`,resourceCards(character),"resources-box")}`;
+    return `${sheetBox("Charakter",escapeHtml(character.name),`<button class="mini-button" id="edit-profile">Bearbeiten</button>`,`${meta}${grid}`,"identity-box")}${sheetBox("Charakteristika","Profilwerte",`<button class="mini-button" id="edit-stats">Bearbeiten</button>`,statProfileTable(character),"stats-box")}${sheetBox("Ressourcen","Wunden, Schicksal & Magie",`<button class="mini-button" id="edit-resources">Bearbeiten</button>`,resourceCards(character),"resources-box")}`;
   };
   const careerTab = character => {
     const c=currentCareerRecord(character),def=careerDefinition(c),scheme=mergedCareerScheme(c),available=character.sheet.resources.xpAvailable,history=careerHistory(character),learned=learnedSkillNames(character),skills=careerSkills(c);
     c.scheme=sanitizeCareerScheme(scheme);
     const intro=`<div class="career-summary"><article><small>Quelle</small><strong>${c.type==="custom"?"Freier Eintrag":"Grundregelwerk"}</strong></article><article><small>Typ</small><strong>${c.type==="basic"?"Basic":c.type==="advanced"?"Advanced":"Frei"}</strong></article><article><small>EP verfügbar</small><strong>${available}</strong></article><article><small>Schema</small><strong>${def?.verifiedScheme?"GRW hinterlegt":"manuell"}</strong></article></div>${def?.notes?`<p class="character-note">${escapeHtml(def.notes)}</p>`:""}`;
-    const schemeBody=`<div class="scheme-grid">${(RULES.advanceableCharacteristics||[]).map(key=>{const max=num(scheme[key],0),cur=num(character.sheet.stats[key]?.advance,0),step=["M","S","T","W","A"].includes(key)?1:10,can=max>0&&cur+step<=max&&available>=num(RULES.rules?.advanceCost,100);return `<article class="scheme-card"><small>${key}</small><strong>${cur} / +${max}</strong><span>${["M","S","T","W","A"].includes(key)?"+1 je Advance":"+10 je Advance"}</span>${max?`<button class="mini-button" data-buy-advance="${key}" ${can?"":"disabled"}>+${step} · 100 EP</button>`:`<span>—</span>`}</article>`}).join("")}</div>${!character.sheet.careerMeta.initialAdvanceUsed && character.sheet.careerMeta.careerChanges===0?`<p class="hint">Der freie Anfangs-Advance kann einmal in der ersten Karriere ohne EP-Kosten genutzt werden.</p><button class="secondary-button" id="free-advance">Freien Anfangs-Advance nutzen</button>`:""}`;
+    syncAdvancedFromCareerScheme(character,c,false);
+    const schemeBody=`<div class="scheme-grid">${(RULES.advanceableCharacteristics||[]).map(key=>{const max=num(scheme[key],0),bought=purchasedAdvance(character,key),step=advanceStep(key),cost=num(RULES.rules?.advanceCost,100),canBuy=max>0&&bought+step<=max&&available>=cost;return `<article class="scheme-card"><small>${key}</small><strong>${max?signed(max):"0"}</strong><span>Schema · gekauft ${bought?signed(bought):"0"}</span>${max?`<button class="mini-button" data-buy-advance="${key}" ${canBuy?"":"disabled"}>+${step} kaufen · ${cost} EP</button>`:`<span>—</span>`}</article>`}).join("")}</div><p class="hint"><strong>Advanced</strong> zeigt nur das Potential der aktuellen Karriere. Erst ein gekaufter Advance erhöht <strong>Current</strong>. Bereits in früheren Karrieren gekaufte Advances bleiben erhalten und zählen gegen das Maximum des neuen Schemas.</p>`;
     const skillBody=skills.length?`<div class="career-skills-list">${skills.map(skill=>{const done=learned.has(skill.name);return `<article class="career-skill-row ${done?"learned":""}"><div><strong>${escapeHtml(skill.name)}</strong><small>${escapeHtml(skill.note||"Karriere-Skill")}</small></div>${done?`<span class="skill-state">gelernt</span>`:`<button class="mini-button" data-learn-career-skill="${escapeHtml(skill.name)}" data-career-note="${escapeHtml((skill.note||"")+` · ${c.name}`)}">Lernen · 100 EP</button>`}</article>`}).join("")}</div>`:`<p class="hint">Für freie Karrieren können Skills weiterhin manuell hinzugefügt werden.</p>`;
     const historyBody=history.length?`<div class="career-history-list">${history.map((entry,index)=>{const oldScheme=mergedCareerScheme(entry);const summary=(RULES.advanceableCharacteristics||[]).filter(key=>num(oldScheme[key],0)>0).map(key=>`${key} +${num(oldScheme[key],0)}`).join(" · ");return `<article class="career-history-row"><div><strong>${escapeHtml(entry.name)}</strong><small>${entry.type==="basic"?"Basic":entry.type==="advanced"?"Advanced":"Frei"}${entry.archivedAt?` · ${new Date(entry.archivedAt).toLocaleDateString("de-DE")}`:""}</small>${summary?`<span class="career-history-scheme">${escapeHtml(summary)}</span>`:""}</div><button class="mini-button" data-restore-career="${index}">Aktivieren</button></article>`}).join("")}</div>`:`<div class="empty compact"><h3>Noch keine früheren Karrieren</h3><p>Beim Karrierewechsel kann die bisherige Karriere automatisch archiviert werden.</p></div>`;
-    return `${sheetBox("Grundregelwerk",escapeHtml(c.name),`<button class="mini-button" id="choose-career">Karriere wählen</button>`,intro,"career-box")}${sheetBox("Advance Scheme","Steigerungen",`<button class="mini-button" id="edit-career-scheme">Schema bearbeiten</button>`,schemeBody,"career-scheme-box")}${sheetBox("Karriere-Skills",`${skills.filter(skill=>!learned.has(skill.name)).length} offen`,"",skillBody,"career-skill-box")}${sheetBox("Frühere Karrieren",`${history.length} gespeichert`,"",historyBody,"career-history-box")}`;
+    return `${sheetBox("Grundregelwerk",escapeHtml(c.name),`<button class="mini-button" id="choose-career">Karriere wählen</button>`,intro,"career-box")}${sheetBox("Advance Scheme","Advanced",`<button class="mini-button" id="edit-career-scheme">Werte bearbeiten</button>`,schemeBody,"career-scheme-box")}${sheetBox("Karriere-Skills",`${skills.filter(skill=>!learned.has(skill.name)).length} offen`,"",skillBody,"career-skill-box")}${sheetBox("Frühere Karrieren",`${history.length} gespeichert`,"",historyBody,"career-history-box")}`;
   };
   const armourCard = (location,part) => `<article class="armour-zone zone-${location}"><small>${locationLabel(location)}</small><strong>${armourDisplay(part)}</strong><span>${part.effects?`Effekt ${signed(part.effects)} · `:""}${part.manual?`Manuell ${signed(part.manual)} · `:""}${part.leatherSuppressed?"Leder unter Metall ohne Zusatzschutz":"AP gesamt"}</span></article>`;
   const weaponSummary = (character,item) => {
@@ -403,10 +476,30 @@
     $$('[data-sheet-tab]',layer).forEach(button=>button.addEventListener("click",()=>remountModal(layer,()=>characterSheet(button.dataset.sheetTab))));
     $("#edit-profile",layer)?.addEventListener("click",()=>editProfile(layer,tab));$("#edit-stats",layer)?.addEventListener("click",()=>editStats(layer,tab));$("#edit-resources",layer)?.addEventListener("click",()=>editResources(layer,tab));$("#add-equipment",layer)?.addEventListener("click",()=>itemEditor("body",null,layer,{sheetTab:"combat"}));
     $$('[data-equip]',layer).forEach(button=>button.addEventListener("click",()=>{const item=character.inventory.find(entry=>entry.id===button.dataset.equip);if(!item)return;item.equipped=!item.equipped;persist();remountModal(layer,()=>characterSheet("combat"))}));$$('[data-edit-item]',layer).forEach(button=>button.addEventListener("click",()=>itemEditor("body",button.dataset.editItem,layer,{sheetTab:"combat"})));
-    $("#choose-career",layer)?.addEventListener("click",()=>careerPicker(layer));$("#edit-career-scheme",layer)?.addEventListener("click",()=>careerSchemeEditor(layer));$("#free-advance",layer)?.addEventListener("click",()=>freeAdvancePicker(layer));$$('[data-buy-advance]',layer).forEach(button=>button.addEventListener("click",()=>buyAdvance(button.dataset.buyAdvance,layer,false)));$$('[data-restore-career]',layer).forEach(button=>button.addEventListener("click",()=>restoreCareerFromHistory(button.dataset.restoreCareer,layer)));$$('[data-learn-career-skill]',layer).forEach(button=>button.addEventListener("click",()=>learnCareerSkill(button.dataset.learnCareerSkill,layer,button.dataset.careerNote||"")));
+    $("#choose-career",layer)?.addEventListener("click",()=>careerPicker(layer));$("#edit-career-scheme",layer)?.addEventListener("click",()=>careerSchemeEditor(layer));$$('[data-buy-advance]',layer).forEach(button=>button.addEventListener("click",()=>buyAdvance(button.dataset.buyAdvance,layer)));$$('[data-restore-career]',layer).forEach(button=>button.addEventListener("click",()=>restoreCareerFromHistory(button.dataset.restoreCareer,layer)));$$('[data-learn-career-skill]',layer).forEach(button=>button.addEventListener("click",()=>learnCareerSkill(button.dataset.learnCareerSkill,layer,button.dataset.careerNote||"")));
     $("#add-skill",layer)?.addEventListener("click",()=>skillPicker(layer));$$('[data-edit-skill]',layer).forEach(button=>button.addEventListener("click",()=>skillEditor(button.dataset.editSkill,layer)));$$('[data-delete-skill]',layer).forEach(button=>button.addEventListener("click",()=>{const skill=character.sheet.skills.find(entry=>entry.id===button.dataset.deleteSkill);if(skill&&confirm(`${skill.name} löschen?`)){character.sheet.skills=character.sheet.skills.filter(entry=>entry.id!==skill.id);persist();remountModal(layer,()=>characterSheet("skills"))}}));
     $("#add-spell",layer)?.addEventListener("click",()=>spellPicker(layer));$$('[data-edit-spell]',layer).forEach(button=>button.addEventListener("click",()=>spellEditor(button.dataset.editSpell,layer)));$$('[data-delete-spell]',layer).forEach(button=>button.addEventListener("click",()=>{const spell=character.sheet.spells.find(entry=>entry.id===button.dataset.deleteSpell);if(spell&&confirm(`${spell.name} löschen?`)){character.sheet.spells=character.sheet.spells.filter(entry=>entry.id!==spell.id);persist();remountModal(layer,()=>characterSheet("magic"))}}));$$('[data-toggle-spell]',layer).forEach(button=>button.addEventListener("click",()=>{const spell=character.sheet.spells.find(entry=>entry.id===button.dataset.toggleSpell);if(!spell)return;spell.active=!spell.active;persist();remountModal(layer,()=>characterSheet("magic"))}));$$('[data-cast-spell]',layer).forEach(button=>button.addEventListener("click",()=>castSpell(button.dataset.castSpell,layer)));
   };
+  const buyAdvance = (key,previous) => {
+    const character=active();
+    const career=currentCareerRecord(character);
+    syncAdvancedFromCareerScheme(character,career,false);
+    const stat=character.sheet.stats[key];
+    if(!stat) return;
+    const max=Math.max(0,num(stat.advance,0));
+    const step=advanceStep(key);
+    const bought=purchasedAdvance(character,key);
+    const cost=num(RULES.rules?.advanceCost,100);
+    if(!max || bought+step>max){alert(`Das aktuelle Advance Scheme erlaubt für ${key} keine weitere Steigerung.`);return}
+    if(character.sheet.resources.xpAvailable<cost){alert(`Nicht genug EP. Benötigt: ${cost} EP.`);return}
+    character.sheet.resources.xpAvailable-=cost;
+    stat.purchased=bought+step;
+    persist();
+    previous.remove();
+    render();
+    characterSheet("career");
+  };
+
   const careerPicker = previous => {
     const character=active(),current=currentCareerRecord(character),options=(RULES.careerOptions||[]).length?RULES.careerOptions:[...RULES.careers.basic.map(name=>({id:"",name,label:name,type:"basic"})),...RULES.careers.advanced.map(name=>({id:"",name,label:name,type:"advanced"}))];
     const basics=options.filter(o=>o.type==="basic"),advanced=options.filter(o=>o.type==="advanced");
@@ -414,33 +507,48 @@
     const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Grundregelwerk</span><h2>Karriere wählen</h2></div><button type="button" class="close">×</button></div><label>Core-Karriere<select name="career"><option value="">— auswählen —</option><optgroup label="Basic Careers">${basics.map(optionHtml).join("")}</optgroup><optgroup label="Advanced Careers / Stufen">${advanced.map(optionHtml).join("")}</optgroup></select></label><label>Oder freie Karriere<input name="custom" placeholder="Eigener Name"></label><label class="toggle-line"><span><strong>Bisherige Karriere in Historie verschieben</strong><br><small>Dadurch bleiben mehrere durchlaufene Karrieren erhalten.</small></span><input name="archiveCurrent" type="checkbox" ${current.name&&current.name!=="Abenteurer"?"checked":""}></label><p class="hint">Bei Core-Karrieren werden Advance Scheme und Skills automatisch geladen. Mehrstufige Karrieren wie Wizard, Cleric, Alchemist oder Sea Captain sind als eigene Stufen auswählbar.</p><button class="full-button">Übernehmen</button></form>`);
     layer.classList.add("high");$(".close",layer).addEventListener("click",()=>layer.remove());$("form",layer).addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements,custom=f.custom.value.trim();let next;if(custom){next=sanitizeCareerRecord({name:custom,type:"custom",scheme:emptyScheme()})}else{const selected=options.find(o=>(o.id||o.label||o.name)===f.career.value);if(!selected){alert("Bitte eine Karriere auswählen.");return}const def=RULES.careerDetails?.[selected.id];next=sanitizeCareerRecord({name:selected.label||selected.name,presetId:selected.id,type:selected.type,scheme:def?.scheme||emptyScheme(),notes:def?.notes||""})}applyCareerRecord(character,next,{archiveCurrent:f.archiveCurrent.checked});persist();layer.remove();previous.remove();render();characterSheet("career")});
   };
-  const freeAdvancePicker = previous => {
-    const character=active(); if(character.sheet.careerMeta.initialAdvanceUsed || character.sheet.careerMeta.careerChanges>0)return;
-    const scheme=mergedCareerScheme(currentCareerRecord(character));character.sheet.career.scheme=sanitizeCareerScheme(scheme);const eligible=RULES.advanceableCharacteristics.filter(key=>{const step=["M","S","T","W","A"].includes(key)?1:10;return num(scheme?.[key],0)>=num(character.sheet.stats[key]?.advance,0)+step});
-    if(!eligible.length){alert("Im eingetragenen Advance Scheme ist aktuell kein freier Advance verfügbar.");return}
-    const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Charaktererschaffung</span><h2>Freier Advance</h2></div><button type="button" class="close">×</button></div><label>Charakteristik<select name="key">${eligible.map(key=>`<option>${key}</option>`).join("")}</select></label><p class="hint">Einmalig ohne EP-Kosten. M, S, T, W und A steigen um 1; Prozentwerte um 10.</p><button class="full-button">Advance nehmen</button></form>`);layer.classList.add("high");$(".close",layer).addEventListener("click",()=>layer.remove());$("form",layer).addEventListener("submit",event=>{event.preventDefault();const key=event.currentTarget.elements.key.value;layer.remove();buyAdvance(key,previous,true)});
-  };
   const careerSchemeEditor = previous => {
     const character=active(),c=currentCareerRecord(character);c.scheme=mergedCareerScheme(c);
-    const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Advance Scheme</span><h2>${escapeHtml(character.career)}</h2></div><button type="button" class="close">×</button></div><div class="form-grid two">${RULES.advanceableCharacteristics.map(key=>`<label>${key} Maximum<input name="${key}" type="number" min="0" step="1" value="${num(c.scheme?.[key],0)}"></label>`).join("")}</div><label>Notiz / Quellenvermerk<textarea name="notes">${escapeHtml(c.notes)}</textarea></label><p class="hint">Trage die im Core-Advance-Scheme angegebenen Maximalsteigerungen ein (z. B. 10/20/30 bei Prozentwerten, 1/2/3 bei M/S/T/W/A). Die App prüft danach jeden Kauf automatisch.</p><button class="full-button">Schema speichern</button></form>`);
-    layer.classList.add("high");$(".close",layer).addEventListener("click",()=>layer.remove());$("form",layer).addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements;RULES.advanceableCharacteristics.forEach(key=>c.scheme[key]=Math.max(0,num(f[key].value,0)));c.notes=f.notes.value.trim();persist();layer.remove();previous.remove();characterSheet("career")});
-  };
-  const buyAdvance = (key,previous,free=false) => {
-    const character=active(),career=currentCareerRecord(character),schemeMap=mergedCareerScheme(career),scheme=num(schemeMap?.[key],0),stat=character.sheet.stats[key];career.scheme=sanitizeCareerScheme(schemeMap);if(!stat||!scheme)return;
-    const step=["M","S","T","W","A"].includes(key)?1:10; if(num(stat.advance)+step>scheme){alert(`Das Advance Scheme erlaubt für ${key} höchstens +${scheme}.`);return}
-    const cost=free?0:num(RULES.rules?.advanceCost,100); if(character.sheet.resources.xpAvailable<cost){alert(`Nicht genug EP. Benötigt: ${cost}.`);return}
-    stat.advance=num(stat.advance)+step;character.sheet.resources.xpAvailable-=cost;if(free){character.sheet.career.freeAdvanceUsed=true;character.sheet.careerMeta.initialAdvanceUsed=true}persist();previous.remove();render();characterSheet("career");
+    const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Advance Scheme</span><h2>${escapeHtml(character.career)}</h2></div><button type="button" class="close">×</button></div><div class="form-grid two">${RULES.advanceableCharacteristics.map(key=>`<label>${key} Advanced<input name="${key}" type="number" min="0" step="1" value="${num(c.scheme?.[key],0)}"></label>`).join("")}</div><label>Notiz / Quellenvermerk<textarea name="notes">${escapeHtml(c.notes)}</textarea></label><p class="hint">Advanced entspricht dem Advance Scheme der aktuellen Karriere. Die Werte werden im Charakterprofil direkt in die Zeile Advanced übernommen.</p><button class="full-button">Schema speichern</button></form>`);
+    layer.classList.add("high");$(".close",layer).addEventListener("click",()=>layer.remove());$("form",layer).addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements;RULES.advanceableCharacteristics.forEach(key=>c.scheme[key]=Math.max(0,num(f[key].value,0)));c.notes=f.notes.value.trim();syncAdvancedFromCareerScheme(character,c,true);persist();layer.remove();previous.remove();characterSheet("career")});
   };
   const editProfile = (previous,returnTab) => {
     const character=active(),i=character.sheet.identity;
     const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Charakterbogen</span><h2>Profil bearbeiten</h2></div><button type="button" class="close">×</button></div><div class="form-grid two"><label>Name<input name="name" value="${escapeHtml(character.name)}"></label><label>Karriere<input name="career" value="${escapeHtml(character.career)}"></label><label>Volk<input name="race" value="${escapeHtml(i.race)}"></label><label>Geschlecht<input name="sex" value="${escapeHtml(i.sex)}"></label><label>Alter<input name="age" value="${escapeHtml(i.age)}"></label><label>Größe<input name="height" value="${escapeHtml(i.height)}"></label><label>Gewicht<input name="weight" value="${escapeHtml(i.weight)}"></label><label>Gesinnung<input name="alignment" value="${escapeHtml(i.alignment)}"></label><label>Geburtsort<input name="birthplace" value="${escapeHtml(i.birthplace)}"></label><label>Augen<input name="eyes" value="${escapeHtml(i.eyes)}"></label><label>Haare<input name="hair" value="${escapeHtml(i.hair)}"></label><label>Frühere Karrieren<input name="previousCareers" value="${escapeHtml(i.previousCareers)}"></label></div><label>Besondere Merkmale<textarea name="marks">${escapeHtml(i.marks)}</textarea></label><label>Freie Notizen<textarea name="notes">${escapeHtml(i.notes)}</textarea></label><button class="full-button">Speichern</button></form>`);
-    layer.classList.add("high"); $(".close",layer).addEventListener("click",()=>layer.remove()); $("form",layer).addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements;character.name=String(f.name.value).trim()||character.name;character.career=String(f.career.value).trim()||"Abenteurer";character.sheet.career.name=character.career;character.sheet.career.presetId="";character.sheet.career.type="custom";Object.keys(character.sheet.identity).forEach(key=>{if(f[key])character.sheet.identity[key]=String(f[key].value).trim()});persist();layer.remove();previous.remove();render();characterSheet(returnTab)});
+    layer.classList.add("high"); $(".close",layer).addEventListener("click",()=>layer.remove()); $("form",layer).addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements;character.name=String(f.name.value).trim()||character.name;character.career=String(f.career.value).trim()||"Abenteurer";character.sheet.career.name=character.career;character.sheet.career.presetId="";character.sheet.career.type="custom";character.sheet.career.scheme=emptyScheme();syncAdvancedFromCareerScheme(character,character.sheet.career,true);Object.keys(character.sheet.identity).forEach(key=>{if(f[key])character.sheet.identity[key]=String(f[key].value).trim()});persist();layer.remove();previous.remove();render();characterSheet(returnTab)});
   };
   const editStats = (previous,returnTab) => {
     const character=active();
-    const rows=RULES.characteristics.map(stat=>{const s=character.sheet.stats[stat.key];return `<div class="stat-edit-row"><strong>${escapeHtml(stat.key)}</strong><span>${escapeHtml(stat.label)}</span><input name="${stat.key}-base" type="number" step="1" value="${num(s.base)}" aria-label="${stat.key} Grundwert"><input name="${stat.key}-advance" type="number" step="1" value="${num(s.advance)}" aria-label="${stat.key} Steigerung"><input name="${stat.key}-manual" type="number" step="1" value="${num(s.manual)}" aria-label="${stat.key} Manuell"></div>`}).join("");
-    const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Profilwerte</span><h2>Charakteristika</h2></div><button type="button" class="close">×</button></div><div class="stat-edit-head"><span></span><span>Wert</span><small>Grund</small><small>Steig.</small><small>Manuell</small></div><div class="stat-edit-list">${rows}</div><p class="hint">Gesamtwert = Grundwert + Steigerung + manueller Modifikator. Jeder Wert bleibt frei überschreibbar.</p><button class="full-button">Werte speichern</button></form>`);
-    layer.classList.add("high"); $(".close",layer).addEventListener("click",()=>layer.remove()); $("form",layer).addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements;RULES.characteristics.forEach(stat=>{character.sheet.stats[stat.key]={base:num(f[`${stat.key}-base`].value),advance:num(f[`${stat.key}-advance`].value),manual:num(f[`${stat.key}-manual`].value)}});persist();layer.remove();previous.remove();render();characterSheet(returnTab)});
+    const header=RULES.characteristics.map(stat=>`<th scope="col"><span>${escapeHtml(stat.key)}</span><small>${escapeHtml(stat.label)}</small></th>`).join("");
+    const startInputs=RULES.characteristics.map(stat=>`<td><input name="${stat.key}-base" type="number" step="1" value="${num(character.sheet.stats[stat.key]?.base,0)}" aria-label="${stat.key} Start"></td>`).join("");
+    const advancedInputs=RULES.characteristics.map(stat=>`<td><input name="${stat.key}-advance" type="number" step="1" min="0" value="${num(character.sheet.stats[stat.key]?.advance,0)}" aria-label="${stat.key} Advanced"></td>`).join("");
+    const currentOutputs=RULES.characteristics.map(stat=>{const mod=skillProfileModifier(character,stat.key);return `<td><output class="profile-current-output" data-current-stat="${stat.key}">${statValue(character,stat.key)}${mod.total?"*":""}</output></td>`}).join("");
+    const bought=(RULES.characteristics||[]).filter(stat=>purchasedAdvance(character,stat.key)>0).map(stat=>`${stat.key} ${signed(purchasedAdvance(character,stat.key))}`).join(" · ");
+    const layer=modal(`<form class="sheet form stat-profile-form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Profilwerte</span><h2>Charakteristika</h2></div><button type="button" class="close">×</button></div><div class="profile-table-wrap edit-profile-table-wrap"><table class="profile-table profile-edit-table"><thead><tr><th scope="col">Profil</th>${header}</tr></thead><tbody><tr class="profile-start-row"><th scope="row">Start</th>${startInputs}</tr><tr class="profile-advanced-row"><th scope="row">Advanced</th>${advancedInputs}</tr><tr class="profile-current-row"><th scope="row">Current</th>${currentOutputs}</tr></tbody></table></div><div class="profile-calculation-note"><span><strong>Gekaufte Advances:</strong> ${bought||"noch keine"}</span><span><strong>*</strong> kennzeichnet einen eingerechneten Skill-/Talentbonus.</span></div><p class="hint"><strong>Start</strong> = Werte aus der Charaktererschaffung. <strong>Advanced</strong> = maximal kaufbare Werte aus dem Scheme der aktuellen Karriere und frei editierbar. <strong>Current</strong> = Start + tatsächlich gekaufte Advances + Profilboni aus Skills/Talenten. Advanced selbst wird nicht auf Current addiert.</p><button class="full-button">Werte speichern</button></form>`);
+    layer.classList.add("high");
+    const form=$("form",layer);
+    const refreshCurrent=()=>RULES.characteristics.forEach(stat=>{
+      const start=num(form.elements[`${stat.key}-base`]?.value,0);
+      const bought=purchasedAdvance(character,stat.key);
+      const modifier=skillProfileModifier(character,stat.key).total;
+      const output=$(`[data-current-stat="${stat.key}"]`,form);
+      if(output) output.textContent=String(start+bought+modifier)+(modifier?"*":"");
+    });
+    $$('.profile-start-row input',form).forEach(input=>input.addEventListener("input",refreshCurrent));
+    $(".close",layer).addEventListener("click",()=>layer.remove());
+    form.addEventListener("submit",event=>{
+      event.preventDefault();
+      const f=event.currentTarget.elements;
+      const career=currentCareerRecord(character);
+      RULES.characteristics.forEach(stat=>{
+        const existing=character.sheet.stats[stat.key]||{};
+        const advanced=Math.max(0,num(f[`${stat.key}-advance`].value));
+        character.sheet.stats[stat.key]={base:num(f[`${stat.key}-base`].value),advance:advanced,purchased:Math.max(0,num(existing.purchased,0)),manual:num(existing.manual,0)};
+        if((RULES.advanceableCharacteristics||[]).includes(stat.key)) career.scheme[stat.key]=advanced;
+      });
+      character.sheet.profileMeta.schemeSyncedPreset=String(career.presetId||career.name||"");
+      persist();layer.remove();previous.remove();render();characterSheet(returnTab);
+    });
   };
   const editResources = (previous,returnTab) => {
     const character=active(),r=character.sheet.resources,m=character.sheet.armourManual;
@@ -456,8 +564,9 @@
   };
   const skillEditor = (skillId,previous) => {
     const character=active(); const existing=character.sheet.skills.find(skill=>skill.id===skillId); const skill=existing||sanitizeSkill({name:""});
-    const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Fertigkeit</span><h2>${existing?"Skill bearbeiten":"Freien Skill hinzufügen"}</h2></div><button type="button" class="close">×</button></div><label>Name<input name="name" required value="${escapeHtml(skill.name)}"></label><label>Zugehöriger Wert / Kategorie<input name="attribute" value="${escapeHtml(skill.attribute)}" placeholder="z. B. Dex, Int oder frei"></label><label>Notiz<textarea name="note">${escapeHtml(skill.note)}</textarea></label><button class="full-button">Speichern</button></form>`);
-    layer.classList.add("high"); $(".close",layer).addEventListener("click",()=>layer.remove()); $("form",layer).addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements;const saved=sanitizeSkill({id:existing?.id||id(),name:f.name.value.trim(),attribute:f.attribute.value.trim(),note:f.note.value.trim(),source:existing?.source||"custom"});if(existing)Object.assign(existing,saved);else character.sheet.skills.push(saved);persist();layer.remove();previous.remove();characterSheet("skills")});
+    const bonusFields=RULES.characteristics.map(stat=>`<label>${escapeHtml(stat.key)} Bonus<input name="bonus-${stat.key}" type="number" step="1" value="${num(skill.profileBonuses?.[stat.key],0)}"></label>`).join("");
+    const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Fertigkeit</span><h2>${existing?"Skill bearbeiten":"Freien Skill hinzufügen"}</h2></div><button type="button" class="close">×</button></div><label>Name<input name="name" required value="${escapeHtml(skill.name)}"></label><label>Zugehöriger Wert / Kategorie<input name="attribute" value="${escapeHtml(skill.attribute)}" placeholder="z. B. Dex, Int oder frei"></label><label>Notiz<textarea name="note">${escapeHtml(skill.note)}</textarea></label><details class="profile-bonus-editor"><summary>Profilbonus durch Skill/Talent</summary><p class="hint">Core-Talente werden automatisch vorbelegt: Fleet Footed M +1, Lightning Reflexes I +10, Very Resilient T +1, Very Strong S +1. Strongman erhält S +1; den im Grundregelwerk ausgewürfelten D4-Wundenbonus kannst du hier bei W eintragen.</p><div class="form-grid two">${bonusFields}</div></details><button class="full-button">Speichern</button></form>`);
+    layer.classList.add("high"); $(".close",layer).addEventListener("click",()=>layer.remove()); $("form",layer).addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements;const name=f.name.value.trim();const profileBonuses=Object.fromEntries(RULES.characteristics.map(stat=>[stat.key,num(f[`bonus-${stat.key}`].value,0)]));const saved=sanitizeSkill({id:existing?.id||id(),name,attribute:f.attribute.value.trim(),note:f.note.value.trim(),source:existing?.source||"custom",profileBonuses});if(existing)Object.assign(existing,saved);else character.sheet.skills.push(saved);persist();layer.remove();previous.remove();characterSheet("skills")});
   };
   const spellPicker = previous => {
     const presets=RULES.spellPresets||[]; const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Grundregelwerk</span><h2>Zauber übernehmen</h2></div><button type="button" class="close">×</button></div><label>Core-Zauber<select name="spell" required><option value="">— auswählen —</option>${presets.map(spell=>`<option value="${escapeHtml(spell.id)}">${escapeHtml(spell.school)} · ${escapeHtml(spell.level)} · ${escapeHtml(spell.name)}</option>`).join("")}</select></label><p class="hint">Petty-Magic-Kosten und eindeutig ausgelesene Werte sind vorbelegt. Bei anderen Core-Zaubern bleiben nicht sicher extrahierte Detailwerte bewusst leer, bis du sie bestätigst.</p><button class="full-button">Übernehmen & bearbeiten</button><button type="button" class="secondary-button" id="custom-spell">Freien Zauber anlegen</button></form>`);layer.classList.add("high");$(".close",layer).addEventListener("click",()=>layer.remove());$("#custom-spell",layer).addEventListener("click",()=>{layer.remove();spellEditor(null,previous)});$("form",layer).addEventListener("submit",event=>{event.preventDefault();const preset=presets.find(x=>x.id===event.currentTarget.elements.spell.value);if(!preset)return;const saved=sanitizeSpell({presetId:preset.id,source:"core",school:preset.school,name:preset.name,level:preset.level,magicPoints:preset.magicPoints,range:preset.range,duration:preset.duration,ingredients:preset.ingredients,description:preset.note||"",costVerified:preset.school==="Petty Magic",armourBonus:preset.name==="Aura of Resistance"?1:preset.name==="Aura of Protection"?2:preset.name==="Aura of Invulnerability"?3:0});active().sheet.spells.push(saved);persist();layer.remove();spellEditor(saved.id,previous)});
@@ -550,13 +659,13 @@
   };
 
   const backupCharacter = () => {
-    const character=active(); const payload={format:"altdorf-geldbeutel-charakter",version:5,createdAt:new Date().toISOString(),character:{name:character.name,career:character.career,balance:character.balance,transactions:character.transactions,inventory:character.inventory,storages:character.storages,sheet:character.sheet}}; const safeName=character.name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase()||"charakter"; const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const link=document.createElement("a"); link.href=url; link.download=`${safeName}-charakter.json`; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    const character=active(); const payload={format:"altdorf-geldbeutel-charakter",version:8,createdAt:new Date().toISOString(),character:{name:character.name,career:character.career,balance:character.balance,transactions:character.transactions,inventory:character.inventory,storages:character.storages,sheet:character.sheet}}; const safeName=character.name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase()||"charakter"; const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const link=document.createElement("a"); link.href=url; link.download=`${safeName}-charakter.json`; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
   };
   const restoreCharacter = async (event,layer) => {
     const file=event.target.files?.[0]; if(!file)return;
     try{
       const payload=JSON.parse(await file.text()); const source=payload?.character;
-      if(payload?.format!=="altdorf-geldbeutel-charakter"||![1,2,3,4,5].includes(payload?.version)||!source)throw new Error("Unbekanntes Sicherungsformat");
+      if(payload?.format!=="altdorf-geldbeutel-charakter"||![1,2,3,4,5,6,7,8].includes(payload?.version)||!source)throw new Error("Unbekanntes Sicherungsformat");
       if(typeof source.name!=="string"||!source.name.trim()||source.name.length>80)throw new Error("Ungültiger Charaktername"); if(typeof source.career!=="string"||source.career.length>100)throw new Error("Ungültige Laufbahn"); if(!Number.isSafeInteger(Number(source.balance))||Number(source.balance)<0)throw new Error("Ungültiger Münzstand"); if(!Array.isArray(source.transactions)||source.transactions.length>10000)throw new Error("Ungültiges Münzbuch");
       const transactions=source.transactions.map(item=>{if(!item||!["income","expense"].includes(item.type)||!Number.isSafeInteger(Number(item.amount))||Number(item.amount)<=0)throw new Error("Fehlerhafte Buchung");const createdAt=new Date(item.createdAt);if(Number.isNaN(createdAt.getTime()))throw new Error("Fehlerhaftes Datum");return{id:id(),type:item.type,amount:Number(item.amount),note:String(item.note||"Buchung").slice(0,300),createdAt:createdAt.toISOString()}});
       const restored=ensureCharacter({id:id(),name:source.name.trim(),career:source.career.trim()||"Abenteurer",balance:Number(source.balance),transactions,inventory:payload.version>=2&&Array.isArray(source.inventory)?source.inventory:[],storages:payload.version>=2&&Array.isArray(source.storages)?source.storages:[],sheet:payload.version>=3?source.sheet:defaultSheet()});

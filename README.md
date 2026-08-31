@@ -15,7 +15,7 @@ Dieses Update erweitert den bestehenden **Altdorfer Geldbeutel** um einen offlin
 - Frühere Karrieren werden in einer echten **Karriere-Historie** gespeichert; ihre Schemata bleiben erhalten und werden in Kurzform angezeigt.
 - Der Skill-Picker priorisiert Skills aus **aktueller und früheren Karrieren**.
 - **Movement (M)** wird jetzt korrekt als steigerbarer Scheme-Wert unterstützt, sofern eine Karriere wie der Runner dies vorsieht.
-- Backup-Format **v5**; ältere Backups v1–v4 werden weiter importiert.
+- Backup-Format **v7**; ältere Backups v1–v6 werden weiter importiert.
 
 ## Bereits enthalten
 
@@ -27,13 +27,13 @@ Dieses Update erweitert den bestehenden **Altdorfer Geldbeutel** um einen offlin
 - Core-Waffen-/Fernkampf-Presets
 - allgemeine Core-Ausrüstung
 - 155 Core-Zaubereinträge
-- EP-Automatik: 100 EP je Charakteristik-Advance bzw. neuem Karriere-Skill
+- EP-Abzug für neue Karriere-Skills; Charakteristik-Werte werden im Profil frei über Start/Advanced geführt
 - automatisierte Rüstungs- und Magie-Wechselwirkungen
 - frei editierbare Felder für Hausregeln und Sonderfälle
 
 ## Karriere-Logik
 
-Advance Schemes werden als **maximale Steigerung gegenüber dem Ausgangsprofil** behandelt. Beim Karrierewechsel werden die Schemata nicht einfach aufeinander addiert. Die bisherige Karriere kann automatisch in die Historie verschoben werden, während die neue Karriere ihr eigenes Core-Schema und ihre Skills lädt.
+Advance Schemes werden als **Advanced-Zeile der aktuell aktiven Karriere** behandelt. Beim Karrierewechsel wird das Scheme der neuen Karriere in Advanced geladen; frühere Schemata werden nicht aufaddiert, sondern bleiben in der Karriere-Historie erhalten.
 
 Bei einer Core-Karriere sind die Scheme-Felder weiterhin manuell editierbar. Das ist absichtlich so, damit Hausregeln oder individuelle Korrekturen möglich bleiben, ohne die hinterlegten Core-Daten zu verlieren.
 
@@ -51,3 +51,17 @@ Die Dateien aus diesem Ordner in das Wurzelverzeichnis des bestehenden Repositor
 Die bereits vorhandenen Grafik- und Fontdateien des Repositories **nicht löschen**. `styles.css` und `sw.js` verwenden sie weiterhin.
 
 Nach dem Update einer bereits installierten PWA kann ein vollständiges Neuladen nötig sein, damit der neue Service-Worker-Cache übernommen wird.
+
+
+## Charakteristika: Start / Advanced / Current
+Die Profilwerte folgen jetzt dieser Logik:
+
+- **Start**: frei eingetragene Werte aus der Charaktererschaffung.
+- **Advanced**: das **Advance Scheme der aktuell ausgewählten Karriere**. Es zeigt nur das Potential, das in dieser Karriere gekauft werden kann, und bleibt frei editierbar.
+- **Current**: `Start + tatsächlich gekaufte Advances + Profilboni aus Skills/Talenten`.
+
+Ein Wert aus **Advanced** erhöht Current also **nicht automatisch**. Jeder reguläre Characteristic-Advance kostet 100 EP. Im Karriere-Tab wird pro Wert angezeigt, wie viel das aktuelle Scheme erlaubt und wie viel davon bereits gekauft wurde.
+
+Profilverändernde Core-Skills/Talente werden automatisch berücksichtigt. Hinterlegt sind insbesondere **Fleet Footed (M +1)**, **Lightning Reflexes (I +10)**, **Very Resilient (T +1)** und **Very Strong (S +1)**. **Strongman** gibt automatisch S +1; der variable D4-Wundenbonus kann im Skill-Editor beim W-Bonus eingetragen werden. Sobald ein Skill/Talent in Current eingerechnet wird, erscheint am betreffenden Current-Wert ein `*`.
+
+Beim Karrierewechsel bleibt die Summe der bereits gekauften Advances erhalten. Das neue Advanced-Schema bestimmt nur, ob noch weitere Advances gekauft werden dürfen; die Schemata werden nicht aufeinander addiert.

@@ -1,16 +1,43 @@
-# Validierung des Karriere-Updates
+# Validierung
 
-Vor dem Packen wurden folgende technische Prüfungen ausgeführt:
+Vor dem Packen wurden folgende Prüfungen ausgeführt:
 
 - `app.js`: JavaScript-Syntaxprüfung erfolgreich
 - `wfrp1e-data.js`: JavaScript-Syntaxprüfung erfolgreich
 - Karriereoptionen: 129
 - Detaildatensätze: 129
-- Basic-Presets: 63
-- Advanced-/Stufen-Presets: 66
 - fehlende Detaildatensätze: 0
 - doppelte Karriere-IDs: 0
 - Scheme-Datensätze ohne vollständige Characteristic-Schlüssel: 0
-- Karriere-Presets ohne Skillliste: 0
 
-Beispielhaft geprüft wurden unter anderem Hypnotist, Runner, Assassin, Wizard Level 3, Illusionist Level 2, Mercenary Captain und Sea Captain Captain.
+## Profil- und EP-Logik
+
+- **Start** wird frei eingetragen.
+- **Advanced** zeigt ausschließlich das Scheme der aktiven Karriere und bleibt frei editierbar.
+- Advanced wird **nicht** direkt auf Current addiert.
+- Tatsächlich erworbene Steigerungen werden separat als `purchased` gespeichert.
+- Ein regulärer Advance kostet 100 EP.
+- Prozentwerte steigen pro Kauf um +10; M, S, T, W und A um +1.
+- Ein weiterer Kauf ist nur möglich, solange `purchased + Schritt <= Advanced` gilt.
+- **Current = Start + purchased + Profilboni aus Skills/Talenten**.
+- Bei einem Karrierewechsel bleiben gekaufte Advances erhalten; nur das Advanced-Schema wechselt.
+
+## Profilverändernde Skills/Talente
+
+Automatisch hinterlegt:
+
+- Fleet Footed → M +1
+- Lightning Reflexes → I +10
+- Very Resilient → T +1
+- Very Strong → S +1
+- Strongman → S +1
+
+Bei Strongman kann der variable D4-Wundenbonus im Skill-Editor als W-Profilbonus eingetragen werden.
+Jeder Current-Wert mit eingerechnetem Skill-/Talentbonus erhält ein `*`.
+
+## Migration
+
+- LocalStorage-Key: `altdorf-geldbeutel-v9`
+- Backup-Format: v8
+- Backups v1–v8 können eingelesen werden.
+- Bei älteren Daten ohne `purchased` wird dieser Wert mit 0 initialisiert; vorhandene Advanced-Werte bleiben als Scheme bestehen.
