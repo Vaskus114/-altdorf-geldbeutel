@@ -23,3 +23,11 @@
 - LocalStorage-Key `altdorf-geldbeutel-v5`.
 - Backup-Format v4.
 - Import älterer Backups v1, v2 und v3 bleibt möglich.
+
+
+## Charakterbogen-Redesign
+- Charakterbogen visuell neu aufgebaut im Stil eines klassischen WFRP-1E-Papierbogens
+- größere papierartige Sheet-Ansicht mit Kopfzeile, Feldboxen und Drucklayout
+- Profil-, Kampf-, Karriere-, Skill- und Magieansichten in bogenähnlicher Feldstruktur
+- Rüstungszonen als Trefferzonen-Diagramm angeordnet
+- Service-Worker-Cache aktualisiert, damit das Redesign sauber ausgeliefert wird

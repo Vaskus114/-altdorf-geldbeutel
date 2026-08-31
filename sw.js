@@ -1,4 +1,4 @@
-const CACHE = "altdorf-geldbeutel-core-v8";
+const CACHE = "altdorf-geldbeutel-core-v9";
 const FILES = [
   "./",
   "./index.html",
