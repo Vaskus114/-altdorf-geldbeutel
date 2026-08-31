@@ -227,3 +227,119 @@
   .sheet-box-head h3{font-size:14px}
   .mini-button{min-height:32px;padding:4px 7px;font-size:10px}
 }
+
+/* Desktop-Fix für den Charakterbogen / Profilbereich */
+@media (min-width: 1100px){
+  .modal:has(.character-sheet){
+    align-items:center;
+    padding:18px;
+  }
+  .character-sheet{
+    width:min(96vw,1500px);
+    max-height:calc(100dvh - 36px);
+    margin:auto;
+    border-radius:4px;
+    padding:12px 14px 16px;
+  }
+  .character-sheet-frame{
+    width:100%;
+    min-width:0;
+    padding:14px 16px 20px;
+  }
+  .sheet-content.tab-profile{
+    width:100%;
+    min-width:0;
+  }
+  .sheet-content.tab-profile .sheet-box{
+    width:100%;
+    min-width:0;
+  }
+  .profile-facts{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+  .sheet-header-band{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+  .sheet-meta-strip{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .profile-table-wrap{
+    display:block;
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scrollbar-width:thin;
+  }
+  .profile-table{
+    width:100%;
+    min-width:1260px;
+    table-layout:fixed;
+  }
+  .profile-table thead th:first-child,
+  .profile-table tbody th{
+    width:92px;
+  }
+  .profile-table thead th{
+    padding:7px 3px;
+    font-size:10px;
+  }
+  .profile-table thead th span{
+    font-size:13px;
+  }
+  .profile-table thead th small{
+    display:block;
+    min-height:16px;
+    margin-top:3px;
+    font-size:7px;
+    line-height:1.05;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+  .profile-table tbody th{
+    padding:9px 7px;
+    font-size:10px;
+  }
+  .profile-table tbody td{
+    height:46px;
+    padding:6px 3px;
+    font-size:17px;
+  }
+  .profile-table .profile-current-row td{
+    font-size:19px;
+  }
+  .profile-compact-grid{
+    display:none;
+  }
+  .resource-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+  .sheet-box-head{
+    flex-wrap:nowrap;
+  }
+}
+
+/* Auf kleineren Desktop-/Notebookbreiten lieber Karten statt eine gequetschte Tabelle. */
+@media (min-width: 761px) and (max-width: 1249px){
+  .character-sheet{
+    width:min(96vw,1120px);
+  }
+  .profile-table-wrap{
+    display:none;
+  }
+  .profile-compact-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+  }
+  .profile-edit-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+
+/* Ab 1250px ist genug Platz für die klassische Profil-Tabelle. */
+@media (min-width:1250px){
+  .profile-table-wrap{display:block}
+  .profile-compact-grid{display:none}
+}

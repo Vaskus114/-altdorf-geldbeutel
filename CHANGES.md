@@ -72,3 +72,11 @@
 - Lange Namen, Karriere-Historien und Merkmale brechen sauber um statt aus den Boxen zu laufen.
 - Das Bearbeitungsfenster für Charakteristika ist jetzt ein responsives Kartenraster statt einer überbreiten Tabelle.
 - Tabs und Kopfzeilen sind auf kleinen Displays scrollbar bzw. zweispaltig angeordnet.
+
+
+## Desktop-Profil-Fix
+- Charakterbogen nutzt auf Desktop bis zu 1500 px bzw. 96 % der Fensterbreite.
+- Profil-Tabelle wird ab 1250 px als vollständige klassische Tabelle dargestellt.
+- Auf kleineren Desktop-/Notebookbreiten wird automatisch auf die kompakte Kartenansicht gewechselt, statt Spalten zu quetschen.
+- Tabellenüberschriften dürfen wieder umbrechen und werden nicht mehr abgeschnitten.
+- Profil, Kopfbereich und Ressourcen nutzen die verfügbare Desktopbreite vollständig.
