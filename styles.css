@@ -92,3 +92,22 @@
 @media(max-width:900px){.character-sheet{width:min(100%,840px)}.sheet-content.tab-profile,.sheet-content.tab-combat{grid-template-columns:1fr}.sheet-content.tab-profile .identity-box,.sheet-content.tab-combat .combat-equipment-box,.sheet-content.tab-combat .combat-effects-box{grid-column:auto}.profile-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.stat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.scheme-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.sheet-header-band,.sheet-meta-strip,.career-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.character-sheet{padding-inline:10px}.character-sheet-frame{padding:10px}.sheet-header-band,.sheet-meta-strip,.resource-grid,.career-summary,.profile-facts,.scheme-grid{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}.sheet-tabs button{font-size:8px;padding-inline:2px}.armour-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"head head" "leftArm rightArm" "body body" "leftLeg rightLeg"}.armour-zone.zone-body{min-height:74px}}
 @media print{body{background:#fff;color:#000}.app,.modal .backdrop,.handle,.close,.actions,.character-launch,.storage-launch,.topbar,.character-button,#open-character-sheet,#open-storage{display:none!important}.modal{position:static;display:block}.character-sheet{display:block;width:100%;max-height:none;margin:0;padding:0;border:0;box-shadow:none;background:#fff}.character-sheet-frame,.sheet-box,.profile-cell,.stat-card,.resource-grid article,.armour-zone,.equipment-row,.simple-list>article,.spell-card{background:#fff;box-shadow:none;color:#000}}
+
+/* Vollständige Karriere-Datenbank / Karrierehistorie */
+.sheet-watermark{position:absolute;right:18px;bottom:16px;z-index:0;max-width:360px;pointer-events:none;color:rgba(57,42,28,.055);font-family:"Cinzel Decorative",Georgia,serif;font-size:42px;line-height:.95;letter-spacing:.055em;text-align:right;text-transform:uppercase;transform:rotate(-2deg)}
+.character-sheet-frame>*:not(.sheet-watermark){position:relative;z-index:1}
+.career-summary{grid-template-columns:repeat(4,minmax(0,1fr))}
+.career-skills-list,.career-history-list{display:grid;gap:8px}
+.career-skill-row,.career-history-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(69,53,36,.58);background:rgba(255,255,255,.12)}
+.career-skill-row strong,.career-history-row strong{display:block;color:#1f1510}
+.career-skill-row small,.career-history-row small{display:block;margin-top:3px;color:#6c5b49;font-size:10px;line-height:1.35}
+.career-skill-row.learned{box-shadow:inset 4px 0 #566b4e}
+.skill-state{display:inline-flex;align-items:center;justify-content:center;min-width:84px;padding:6px 10px;border:1px solid rgba(66,90,61,.45);background:rgba(86,107,78,.12);color:#31462f;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.career-box .character-note{margin-top:10px}
+.career-scheme-box .scheme-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.career-scheme-box .scheme-card{min-height:116px}
+.career-skill-box .sheet-box-body,.career-history-box .sheet-box-body{padding-top:8px}
+@media(max-width:1000px){.career-scheme-box .scheme-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:760px){.career-scheme-box .scheme-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.career-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet-watermark{font-size:30px;max-width:240px}}
+@media(max-width:520px){.career-scheme-box .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.career-skill-row,.career-history-row{grid-template-columns:1fr}.career-summary{grid-template-columns:1fr}.sheet-watermark{font-size:23px;max-width:170px}}
+.career-history-scheme{display:block;margin-top:5px;color:#493b2e;font-size:10px;line-height:1.35;font-style:italic}

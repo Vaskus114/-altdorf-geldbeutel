@@ -1,0 +1,138 @@
+# Integrierte Karrieren – WFRP 1E Grundregelwerk
+
+Insgesamt **129 auswählbare Karriere-/Stufen-Presets**: 63 Basic und 66 Advanced-/Stufen-Presets.
+
+## Basic Careers
+
+- Agitator
+- Alchemist's Apprentice
+- Artisan's Apprentice
+- Bawd
+- Beggar
+- Boatman
+- Bodyguard
+- Bounty Hunter
+- Coachman
+- Druid
+- Engineer
+- Entertainer
+- Exciseman
+- Fisherman
+- Footpad
+- Gambler
+- Gamekeeper
+- Grave Robber
+- Herbalist
+- Herdsman
+- Hunter
+- Hypnotist
+- Initiate
+- Jailer
+- Labourer
+- Marine
+- Mercenary
+- Militiaman
+- Minstrel
+- Muleskinner
+- Noble
+- Outlaw
+- Outrider
+- Pedlar
+- Pharmacist
+- Physician's Student
+- Pilot
+- Pit Fighter
+- Prospector
+- Protagonist
+- Raconteur
+- Rat Catcher
+- Roadwarden
+- Runner
+- Rustler
+- Scribe
+- Seaman
+- Seer
+- Servant
+- Smuggler
+- Soldier
+- Squire
+- Student
+- Thief
+- Toll-keeper
+- Tomb Robber
+- Trader
+- Trapper
+- Troll Slayer
+- Tunnel Fighter
+- Watchman
+- Wizard's Apprentice
+- Woodsman
+
+## Advanced Careers / Stufen
+
+- Alchemist · Level 1
+- Alchemist · Level 2
+- Alchemist · Level 3
+- Alchemist · Level 4
+- Artillerist
+- Artisan
+- Assassin
+- Charlatan
+- Cleric · Level 1
+- Cleric · Level 2
+- Cleric · Level 3
+- Cleric · Level 4
+- Counterfeiter
+- Demagogue
+- Druidic Priest · Level 1
+- Druidic Priest · Level 2
+- Druidic Priest · Level 3
+- Druidic Priest · Level 4
+- Duellist
+- Explorer
+- Fence
+- Forger
+- Freelance
+- Giant Slayer
+- Gunner
+- Highwayman
+- Judicial Champion
+- Lawyer
+- Mercenary · Sergeant
+- Mercenary · Captain
+- Merchant
+- Navigator
+- Outlaw Chief
+- Physician
+- Racketeer
+- Sapper
+- Scholar
+- Scout
+- Sea Captain · Mate
+- Sea Captain · Captain
+- Slaver
+- Spy
+- Targeteer
+- Templar
+- Torturer
+- Witch-hunter
+- Wizard · Level 1
+- Wizard · Level 2
+- Wizard · Level 3
+- Wizard · Level 4
+- Demonologist · Level 1
+- Demonologist · Level 2
+- Demonologist · Level 3
+- Demonologist · Level 4
+- Elementalist · Level 1
+- Elementalist · Level 2
+- Elementalist · Level 3
+- Elementalist · Level 4
+- Illusionist · Level 1
+- Illusionist · Level 2
+- Illusionist · Level 3
+- Illusionist · Level 4
+- Necromancer · Level 1
+- Necromancer · Level 2
+- Necromancer · Level 3
+- Necromancer · Level 4

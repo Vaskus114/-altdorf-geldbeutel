@@ -1,33 +1,33 @@
-# Änderungen – Core Character Manager
+# Änderungen – vollständige WFRP-1E-Karrieren
 
-## Daten & Regeln
-- Core-only Datenquelle verankert (`WFRP1E.source.scope = core-only`).
-- 63 Basic Careers und 40 Advanced/Specialist Careers.
-- 133 Skills plus Specialist-Weapon-Spezialisierungen.
-- 15 Rüstungs-, 49 Waffen- und 28 allgemeine Ausrüstungspresets.
-- 155 Core-Zaubernamen nach Schule/Level.
+## Karriere-Datenbank
+
+- alle 63 Basic Careers mit Advance Scheme integriert
+- alle 40 Advanced-Career-Gruppen integriert
+- mehrstufige Advanced Careers in einzelne auswählbare Stufen aufgeteilt
+- insgesamt 129 konkrete Karriere-/Stufen-Presets
+- jeder Eintrag besitzt ein vollständiges Scheme-Objekt
+- Karriere-Skills für alle Presets hinterlegt
+- Movement (M) in der Advance-Automatik ergänzt
 
 ## Charakterbogen
-- neuer Tab **Karriere** mit Core-Auswahl, frei editierbarem Advance Scheme und EP-Kaufautomatik.
-- einmaliger freier Anfangs-Advance.
-- Core-Skill-Auswahl, optionaler 100-EP-Kauf und weiterhin freie Skills.
-- Core-Zauber-Auswahl; automatische MP-Abzüge nur nach bestätigten Kosten.
-- Magie-Rüstungsaufschlag +2 MP je relevantem AP inklusive Override.
-- Specialist-Weapon-Hinweise für WS/BS 10 ohne passende Kategorie.
 
-## Inventar
-- Core-Presets übernehmen Name, Typ, ENC, Wert, Rüstungs-/Waffenwerte und Regelnotizen.
-- Gegenstände bleiben frei editierbar und mit Truhen/Lagern verzahnt.
+- Karriereauswahl lädt Scheme und Skillliste automatisch
+- offene Karriere-Skills direkt mit 100 EP lernbar
+- mehrere Karrieren über Karriere-Historie unterstützt
+- frühere Career Schemes werden in der Historie als Kurzprofil angezeigt
+- Skill-Auswahl berücksichtigt aktuelle und frühere Karrieren
+- klassische Papierbogen-Optik weiter verfeinert
 
 ## Datenmigration
-- LocalStorage-Key `altdorf-geldbeutel-v5`.
-- Backup-Format v4.
-- Import älterer Backups v1, v2 und v3 bleibt möglich.
 
+- LocalStorage-Key: `altdorf-geldbeutel-v6`
+- Backup-Format: v5
+- Import von Backups v1–v4 bleibt möglich
+- Service-Worker-Cache auf `altdorf-geldbeutel-core-v11-all-careers` erhöht
 
-## Charakterbogen-Redesign
-- Charakterbogen visuell neu aufgebaut im Stil eines klassischen WFRP-1E-Papierbogens
-- größere papierartige Sheet-Ansicht mit Kopfzeile, Feldboxen und Drucklayout
-- Profil-, Kampf-, Karriere-, Skill- und Magieansichten in bogenähnlicher Feldstruktur
-- Rüstungszonen als Trefferzonen-Diagramm angeordnet
-- Service-Worker-Cache aktualisiert, damit das Redesign sauber ausgeliefert wird
+## Korrektur bei mehreren Karrieren
+
+- der freie Anfangs-Advance ist jetzt **charakterweit** auf die erste Karriere begrenzt
+- ein Karrierewechsel erzeugt keinen neuen kostenlosen Advance
+- Karrierewechsel werden unabhängig davon gezählt, ob die alte Karriere in der sichtbaren Historie archiviert wird
