@@ -87,3 +87,10 @@
 - Im Werte-Editor wird der rohe Startwert weiterhin frei eingegeben; darunter erscheint die effektive Start-Anzeige inklusive Skill-/Talentbonus.
 - Rüstungszonen zeigen jetzt die WFRP-1E-Trefferbereiche: Kopf 01-15, rechter Arm 16-35, linker Arm 36-55, Körper 56-80, rechtes Bein 81-90, linkes Bein 91-00.
 - Unter der Rüstungsanzeige steht die Regel, dass die Ziffern des erfolgreichen Angriffswurfs zur Ermittlung der Trefferzone vertauscht werden.
+
+
+## Inventar-Synchronisierung
+- Der Charakterbogen zeigt im Bereich **Kampf → Ausrüstung → Am Körper** jetzt alle Gegenstände aus dem Körper-Inventar, nicht nur Waffen und Rüstung.
+- Gegenstände, die über **Truhen & Lager → Am Körper** hinzugefügt werden, erscheinen dadurch sofort auch im Charakterbogen.
+- Waffen und Rüstungen behalten dort ihre Anlegen/Ablegen-Funktion; normale Gegenstände werden mit Menge, ENC, Wert und Notiz angezeigt.
+- Beide Menüs greifen auf dasselbe Inventarobjekt zu; es gibt keine doppelte Datenhaltung.

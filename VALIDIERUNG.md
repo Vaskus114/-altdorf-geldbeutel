@@ -49,3 +49,9 @@ Jeder Current-Wert mit eingerechnetem Skill-/Talentbonus erhält ein `*`.
 - Statische Prüfung: Stern-Markierung wird im Profil unter **Start** erzeugt; **Current** enthält keinen Stern.
 - Statische Prüfung: alle sechs humanoiden Trefferbereiche 01-15 / 16-35 / 36-55 / 56-80 / 81-90 / 91-00 sind in der Rüstungsansicht hinterlegt.
 - Ein Chromium-Screenshot-Smoke-Test wurde versucht, ist in dieser Container-Umgebung jedoch wegen des Headless-Browser-Prozesses in ein Timeout gelaufen; deshalb wird kein bestandener Browser-E2E-Test behauptet.
+
+
+## Inventar-Synchronisierung
+- Kampfansicht verwendet jetzt `character.inventory` ohne Typfilter.
+- Generische Körper-Gegenstände werden ebenfalls angezeigt.
+- Equip-Button erscheint weiterhin nur für Waffen/Rüstung.
