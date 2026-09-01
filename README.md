@@ -69,3 +69,12 @@ Beim Karrierewechsel bleibt die Summe der bereits gekauften Advances erhalten. D
 
 ## Responsive Profilanzeige
 Der Profilbereich passt sich jetzt an Desktop, Tablet und Smartphone an. Auf breiten Bildschirmen bleibt die klassische Tabellenansicht erhalten; auf kleineren Displays werden die Charakteristika automatisch als kompakte Start/Advanced/Current-Karten dargestellt.
+
+
+## Profilboni und Trefferzonen
+
+- Profilverändernde Skills/Talente werden jetzt in **Start** eingerechnet und dort mit `*` markiert.
+- **Current** zeigt die Gesamtsumme aus effektivem Startwert und tatsächlich gekauften Advances, ohne eigenen Stern.
+- Der frei eingegebene Roh-Startwert bleibt im Editor erhalten; die effektive Start-Anzeige wird separat darunter gezeigt.
+- Die Rüstungsansicht zeigt die humanoiden Trefferzonen des WFRP-1E-Grundregelwerks: **Kopf 01-15, rechter Arm 16-35, linker Arm 36-55, Körper 56-80, rechtes Bein 81-90, linkes Bein 91-00**.
+- Zur Trefferzonenermittlung werden bei einem erfolgreichen Angriff die beiden Ziffern des Angriffswurfs vertauscht (z. B. 27 -> 72).

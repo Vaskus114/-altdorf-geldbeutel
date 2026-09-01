@@ -209,9 +209,13 @@
     });
     return {total,details};
   };
+  const startStatValue = (character,key) => {
+    const stat=character.sheet.stats[key]||{base:0,advance:0,purchased:0,manual:0};
+    return num(stat.base)+skillProfileModifier(character,key).total;
+  };
   const statValue = (character,key) => {
     const stat=character.sheet.stats[key]||{base:0,advance:0,purchased:0,manual:0};
-    return num(stat.base)+num(stat.purchased)+skillProfileModifier(character,key).total;
+    return startStatValue(character,key)+num(stat.purchased);
   };
   const advanceStep = key => ["M","S","T","W","A"].includes(key)?1:10;
   const purchasedAdvance = (character,key) => Math.max(0,num(character.sheet.stats?.[key]?.purchased,0));
@@ -416,21 +420,22 @@
     syncAdvancedFromCareerScheme(character,current,false);
     const header=RULES.characteristics.map(stat=>`<th scope="col"><span>${escapeHtml(stat.key)}</span><small>${escapeHtml(stat.label)}</small></th>`).join("");
     const row=(labelName,getValue,className="")=>`<tr class="${className}"><th scope="row">${labelName}</th>${RULES.characteristics.map(stat=>`<td>${getValue(stat)}</td>`).join("")}</tr>`;
-    const currentCell=stat=>{
+    const startCell=stat=>{
       const mod=skillProfileModifier(character,stat.key);
       const title=mod.details.map(item=>`${item.name} ${signed(item.amount)}`).join(" · ");
-      return `<span class="current-stat-value"${title?` title="${escapeHtml(title)}"`:""}>${statValue(character,stat.key)}${mod.total?`<sup class="profile-skill-star" aria-label="Skill-/Talentbonus">*</sup>`:""}</span>`;
+      return `<span class="start-stat-value"${title?` title="${escapeHtml(title)}"`:""}>${startStatValue(character,stat.key)}${mod.total?`<sup class="profile-skill-star" aria-label="Skill-/Talentbonus">*</sup>`:""}</span>`;
     };
+    const currentCell=stat=>`<span class="current-stat-value">${statValue(character,stat.key)}</span>`;
     const compactCards=RULES.characteristics.map(stat=>{
       const mod=skillProfileModifier(character,stat.key);
-      const start=num(character.sheet.stats[stat.key]?.base,0);
+      const start=startStatValue(character,stat.key);
       const advanced=num(character.sheet.stats[stat.key]?.advance,0);
       const title=mod.details.map(item=>`${item.name} ${signed(item.amount)}`).join(" · ");
-      return `<article class="profile-stat-card"><header><strong>${escapeHtml(stat.key)}</strong><small>${escapeHtml(stat.label)}</small></header><dl><div><dt>Start</dt><dd>${start}</dd></div><div><dt>Advanced</dt><dd>${advanced?signed(advanced):"0"}</dd></div><div class="current"><dt>Current</dt><dd${title?` title="${escapeHtml(title)}"`:""}>${statValue(character,stat.key)}${mod.total?`<sup class="profile-skill-star" aria-label="Skill-/Talentbonus">*</sup>`:""}</dd></div></dl></article>`;
+      return `<article class="profile-stat-card"><header><strong>${escapeHtml(stat.key)}</strong><small>${escapeHtml(stat.label)}</small></header><dl><div><dt>Start</dt><dd${title?` title="${escapeHtml(title)}"`:""}>${start}${mod.total?`<sup class="profile-skill-star" aria-label="Skill-/Talentbonus">*</sup>`:""}</dd></div><div><dt>Advanced</dt><dd>${advanced?signed(advanced):"0"}</dd></div><div class="current"><dt>Current</dt><dd>${statValue(character,stat.key)}</dd></div></dl></article>`;
     }).join("");
     const bought=(RULES.characteristics||[]).filter(stat=>purchasedAdvance(character,stat.key)>0).map(stat=>`${stat.key} ${signed(purchasedAdvance(character,stat.key))}`).join(" · ");
     const skillMods=(RULES.characteristics||[]).map(stat=>{const mod=skillProfileModifier(character,stat.key);return mod.total?`${stat.key} ${signed(mod.total)} (${mod.details.map(x=>x.name).join(", ")})`:""}).filter(Boolean).join(" · ");
-    return `<div class="profile-table-wrap"><table class="profile-table"><thead><tr><th scope="col">Profil</th>${header}</tr></thead><tbody>${row("Start",stat=>num(character.sheet.stats[stat.key]?.base,0),"profile-start-row")}${row("Advanced",stat=>{const value=num(character.sheet.stats[stat.key]?.advance,0);return value?signed(value):"0"},"profile-advanced-row")}${row("Current",currentCell,"profile-current-row")}</tbody></table></div><div class="profile-compact-grid" aria-label="Profilwerte">${compactCards}</div><div class="profile-calculation-note"><span><strong>Gekauft:</strong> ${bought||"noch keine Advances"}</span>${skillMods?`<span><strong>* Skill/Talent:</strong> ${escapeHtml(skillMods)}</span>`:""}</div>`;
+    return `<div class="profile-table-wrap"><table class="profile-table"><thead><tr><th scope="col">Profil</th>${header}</tr></thead><tbody>${row("Start",startCell,"profile-start-row")}${row("Advanced",stat=>{const value=num(character.sheet.stats[stat.key]?.advance,0);return value?signed(value):"0"},"profile-advanced-row")}${row("Current",currentCell,"profile-current-row")}</tbody></table></div><div class="profile-compact-grid" aria-label="Profilwerte">${compactCards}</div><div class="profile-calculation-note"><span><strong>Gekauft:</strong> ${bought||"noch keine Advances"}</span>${skillMods?`<span><strong>* Start inkl. Skill/Talent:</strong> ${escapeHtml(skillMods)}</span>`:""}</div>`;
   };
   const resourceCards = character => {
     const r=character.sheet.resources;
@@ -452,14 +457,15 @@
     const historyBody=history.length?`<div class="career-history-list">${history.map((entry,index)=>{const oldScheme=mergedCareerScheme(entry);const summary=(RULES.advanceableCharacteristics||[]).filter(key=>num(oldScheme[key],0)>0).map(key=>`${key} +${num(oldScheme[key],0)}`).join(" · ");return `<article class="career-history-row"><div><strong>${escapeHtml(entry.name)}</strong><small>${entry.type==="basic"?"Basic":entry.type==="advanced"?"Advanced":"Frei"}${entry.archivedAt?` · ${new Date(entry.archivedAt).toLocaleDateString("de-DE")}`:""}</small>${summary?`<span class="career-history-scheme">${escapeHtml(summary)}</span>`:""}</div><button class="mini-button" data-restore-career="${index}">Aktivieren</button></article>`}).join("")}</div>`:`<div class="empty compact"><h3>Noch keine früheren Karrieren</h3><p>Beim Karrierewechsel kann die bisherige Karriere automatisch archiviert werden.</p></div>`;
     return `${sheetBox("Grundregelwerk",escapeHtml(c.name),`<button class="mini-button" id="choose-career">Karriere wählen</button>`,intro,"career-box")}${sheetBox("Advance Scheme","Advanced",`<button class="mini-button" id="edit-career-scheme">Werte bearbeiten</button>`,schemeBody,"career-scheme-box")}${sheetBox("Karriere-Skills",`${skills.filter(skill=>!learned.has(skill.name)).length} offen`,"",skillBody,"career-skill-box")}${sheetBox("Frühere Karrieren",`${history.length} gespeichert`,"",historyBody,"career-history-box")}`;
   };
-  const armourCard = (location,part) => `<article class="armour-zone zone-${location}"><small>${locationLabel(location)}</small><strong>${armourDisplay(part)}</strong><span>${part.effects?`Effekt ${signed(part.effects)} · `:""}${part.manual?`Manuell ${signed(part.manual)} · `:""}${part.leatherSuppressed?"Leder unter Metall ohne Zusatzschutz":"AP gesamt"}</span></article>`;
+  const HIT_LOCATION_RANGES = {head:"01-15",rightArm:"16-35",leftArm:"36-55",body:"56-80",rightLeg:"81-90",leftLeg:"91-00"};
+  const armourCard = (location,part) => `<article class="armour-zone zone-${location}"><div class="armour-zone-head"><small>${locationLabel(location)}</small><span class="hit-location-range">${HIT_LOCATION_RANGES[location]||"—"}</span></div><strong>${armourDisplay(part)}</strong><span>${part.effects?`Effekt ${signed(part.effects)} · `:""}${part.manual?`Manuell ${signed(part.manual)} · `:""}${part.leatherSuppressed?"Leder unter Metall ohne Zusatzschutz":"AP gesamt"}</span></article>`;
   const weaponSummary = (character,item) => {
     const w=item.weapon;if(w.mode==="missile")return `ES ${escapeHtml(w.effectiveStrength||"—")} · Reichweite ${escapeHtml(w.rangeShort||"—")}/${escapeHtml(w.rangeLong||"—")}/${escapeHtml(w.rangeExtreme||"—")} · ${escapeHtml(w.load||"—")}${weaponSkillWarning(character,item)}`;
     const s=statValue(character,"S"),damage=String(w.damage||"0").trim();return `Schaden 1W6 + ${s}${damage&&damage!=="0"?` ${signed(damage)}`:""} · I ${escapeHtml(w.initiative||"0")} · Treffer ${escapeHtml(w.toHit||"0")} · Parade ${escapeHtml(w.parry||"0")}${weaponSkillWarning(character,item)}`;
   };
   const combatTab = character => {
     const armour=armourBreakdown(character),warnings=armourWarnings(character),equipment=character.inventory.filter(item=>item.type==="armor"||item.type==="weapon"),cap=carryingCapacity(character),carried=bodyEnc(character);
-    const armourBody=`<div class="armour-grid">${RULES.locations.map(location=>armourCard(location,armour[location])).join("")}</div>${warnings.length?`<div class="rules-warning"><strong>Rüstungshinweis</strong>${warnings.map(w=>`<p>${escapeHtml(w)}</p>`).join("")}</div>`:""}`;
+    const armourBody=`<div class="armour-grid">${RULES.locations.map(location=>armourCard(location,armour[location])).join("")}</div><p class="hit-location-note"><strong>Trefferzone:</strong> Die beiden Ziffern des erfolgreichen Angriffswurfs werden vertauscht (z. B. 27 → 72); das Ergebnis bestimmt anhand der Zahlen oben die getroffene Zone.</p>${warnings.length?`<div class="rules-warning"><strong>Rüstungshinweis</strong>${warnings.map(w=>`<p>${escapeHtml(w)}</p>`).join("")}</div>`:""}`;
     const loadBody=`<div class="resource-grid combat-strip"><article><small>Getragene Last</small><strong>${carried}</strong><span>ENC am Körper</span></article><article><small>Traglast</small><strong>${cap||0}</strong><span>aus Stärke × 100</span></article><article><small>Rüstungs-Punkte</small><strong>${physicalArmourPoints(character)}</strong><span>relevant für Magie</span></article><article><small>Magie-Malus</small><strong>+${spellArmourSurcharge(character)}</strong><span>MP pro Zauber</span></article></div>${cap&&carried>cap?`<div class="rules-warning"><strong>Überladen</strong><p>Die getragene Last liegt über der aus Stärke × 100 abgeleiteten Traglast.</p></div>`:""}`;
     const equipmentBody=`<div class="equipment-list">${equipment.length?equipment.map(item=>`<article class="equipment-row ${item.equipped?"equipped":""}"><div><strong>${escapeHtml(item.name)}</strong><small>${item.type==="armor"?`${item.equipped?"angelegt":"nicht angelegt"} · ${item.armourMaterial==="leather"?"0/1 Leder":"Rüstung"}`:weaponSummary(character,item)}</small></div><div class="item-actions"><button class="mini-button" data-equip="${item.id}">${item.equipped?"Ablegen":"Anlegen"}</button><button class="mini-button" data-edit-item="${item.id}">✎</button></div></article>`).join(""):`<div class="empty compact"><h3>Noch keine Kampf-Ausrüstung</h3><p>Rüstung oder Waffen aus dem Inventar können hier automatisch wirken.</p></div>`}</div>`;
     const effectBody=character.sheet.spells.some(spell=>spell.active&&spell.armourBonus)?character.sheet.spells.filter(spell=>spell.active&&spell.armourBonus).map(spell=>`<p class="character-note">${escapeHtml(spell.name)}: ${signed(spell.armourBonus)} AP auf alle Trefferzonen</p>`).join(""):`<p class="hint">Derzeit sind keine rüstungsrelevanten Zaubereffekte aktiv.</p>`;
@@ -529,17 +535,21 @@
     const bought=(RULES.characteristics||[]).filter(stat=>purchasedAdvance(character,stat.key)>0).map(stat=>`${stat.key} ${signed(purchasedAdvance(character,stat.key))}`).join(" · ");
     const cards=RULES.characteristics.map(stat=>{
       const mod=skillProfileModifier(character,stat.key);
-      return `<article class="profile-edit-card"><header><strong>${escapeHtml(stat.key)}</strong><small>${escapeHtml(stat.label)}</small></header><label>Start<input name="${stat.key}-base" type="number" step="1" value="${num(character.sheet.stats[stat.key]?.base,0)}" aria-label="${stat.key} Start"></label><label>Advanced<input name="${stat.key}-advance" type="number" step="1" min="0" value="${num(character.sheet.stats[stat.key]?.advance,0)}" aria-label="${stat.key} Advanced"></label><div class="profile-edit-current"><small>Current</small><output class="profile-current-output" data-current-stat="${stat.key}">${statValue(character,stat.key)}${mod.total?"*":""}</output></div></article>`;
+      const modTitle=mod.details.map(item=>`${item.name} ${signed(item.amount)}`).join(" · ");
+      return `<article class="profile-edit-card"><header><strong>${escapeHtml(stat.key)}</strong><small>${escapeHtml(stat.label)}</small></header><label>Start<input name="${stat.key}-base" type="number" step="1" value="${num(character.sheet.stats[stat.key]?.base,0)}" aria-label="${stat.key} Start"><span class="profile-edit-start-preview" data-start-stat="${stat.key}"${modTitle?` title="${escapeHtml(modTitle)}"`:""}>Anzeige: ${startStatValue(character,stat.key)}${mod.total?`<sup class="profile-skill-star">*</sup>`:""}</span></label><label>Advanced<input name="${stat.key}-advance" type="number" step="1" min="0" value="${num(character.sheet.stats[stat.key]?.advance,0)}" aria-label="${stat.key} Advanced"></label><div class="profile-edit-current"><small>Current</small><output class="profile-current-output" data-current-stat="${stat.key}">${statValue(character,stat.key)}</output></div></article>`;
     }).join("");
-    const layer=modal(`<form class="sheet form stat-profile-form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Profilwerte</span><h2>Charakteristika</h2></div><button type="button" class="close">×</button></div><div class="profile-edit-grid">${cards}</div><div class="profile-calculation-note"><span><strong>Gekaufte Advances:</strong> ${bought||"noch keine"}</span><span><strong>*</strong> kennzeichnet einen eingerechneten Skill-/Talentbonus.</span></div><p class="hint"><strong>Start</strong> = Werte aus der Charaktererschaffung. <strong>Advanced</strong> = maximal kaufbare Werte aus dem Scheme der aktuellen Karriere und frei editierbar. <strong>Current</strong> = Start + tatsächlich gekaufte Advances + Profilboni aus Skills/Talenten. Advanced selbst wird nicht auf Current addiert.</p><button class="full-button">Werte speichern</button></form>`);
+    const layer=modal(`<form class="sheet form stat-profile-form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Profilwerte</span><h2>Charakteristika</h2></div><button type="button" class="close">×</button></div><div class="profile-edit-grid">${cards}</div><div class="profile-calculation-note"><span><strong>Gekaufte Advances:</strong> ${bought||"noch keine"}</span><span><strong>*</strong> kennzeichnet einen in Start eingerechneten Skill-/Talentbonus.</span></div><p class="hint"><strong>Start</strong> = Wert aus der Charaktererschaffung plus feste Profilboni aus Skills/Talenten. <strong>Advanced</strong> = maximal kaufbare Werte aus dem Scheme der aktuellen Karriere und frei editierbar. <strong>Current</strong> = effektiver Start + tatsächlich gekaufte Advances. Advanced selbst wird nicht auf Current addiert.</p><button class="full-button">Werte speichern</button></form>`);
     layer.classList.add("high");
     const form=$("form",layer);
     const refreshCurrent=()=>RULES.characteristics.forEach(stat=>{
-      const start=num(form.elements[`${stat.key}-base`]?.value,0);
+      const rawStart=num(form.elements[`${stat.key}-base`]?.value,0);
       const bought=purchasedAdvance(character,stat.key);
       const modifier=skillProfileModifier(character,stat.key).total;
+      const effectiveStart=rawStart+modifier;
+      const startPreview=$(`[data-start-stat="${stat.key}"]`,form);
       const output=$(`[data-current-stat="${stat.key}"]`,form);
-      if(output) output.textContent=String(start+bought+modifier)+(modifier?"*":"");
+      if(startPreview) startPreview.innerHTML=`Anzeige: ${effectiveStart}${modifier?'<sup class="profile-skill-star">*</sup>':""}`;
+      if(output) output.textContent=String(effectiveStart+bought);
     });
     $$('[name$="-base"]',form).forEach(input=>input.addEventListener("input",refreshCurrent));
     $(".close",layer).addEventListener("click",()=>layer.remove());

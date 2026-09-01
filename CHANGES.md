@@ -80,3 +80,10 @@
 - Auf kleineren Desktop-/Notebookbreiten wird automatisch auf die kompakte Kartenansicht gewechselt, statt Spalten zu quetschen.
 - Tabellenüberschriften dürfen wieder umbrechen und werden nicht mehr abgeschnitten.
 - Profil, Kopfbereich und Ressourcen nutzen die verfügbare Desktopbreite vollständig.
+
+## Start-Boni & Trefferzonen
+- Feste Profilboni aus Skills/Talenten werden im Profil jetzt in der Zeile **Start** angezeigt und dort mit `*` markiert.
+- **Current** bleibt die Gesamtsumme aus effektivem Startwert und tatsächlich gekauften Advances, ohne eigenen Stern.
+- Im Werte-Editor wird der rohe Startwert weiterhin frei eingegeben; darunter erscheint die effektive Start-Anzeige inklusive Skill-/Talentbonus.
+- Rüstungszonen zeigen jetzt die WFRP-1E-Trefferbereiche: Kopf 01-15, rechter Arm 16-35, linker Arm 36-55, Körper 56-80, rechtes Bein 81-90, linkes Bein 91-00.
+- Unter der Rüstungsanzeige steht die Regel, dass die Ziffern des erfolgreichen Angriffswurfs zur Ermittlung der Trefferzone vertauscht werden.

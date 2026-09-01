@@ -41,3 +41,11 @@ Jeder Current-Wert mit eingerechnetem Skill-/Talentbonus erhält ein `*`.
 - Backup-Format: v8
 - Backups v1–v8 können eingelesen werden.
 - Bei älteren Daten ohne `purchased` wird dieser Wert mit 0 initialisiert; vorhandene Advanced-Werte bleiben als Scheme bestehen.
+
+
+## Start-Bonus / Trefferzonen Update
+- `app.js`: Node Syntaxprüfung bestanden.
+- `wfrp1e-data.js`: Node Syntaxprüfung bestanden.
+- Statische Prüfung: Stern-Markierung wird im Profil unter **Start** erzeugt; **Current** enthält keinen Stern.
+- Statische Prüfung: alle sechs humanoiden Trefferbereiche 01-15 / 16-35 / 36-55 / 56-80 / 81-90 / 91-00 sind in der Rüstungsansicht hinterlegt.
+- Ein Chromium-Screenshot-Smoke-Test wurde versucht, ist in dieser Container-Umgebung jedoch wegen des Headless-Browser-Prozesses in ein Timeout gelaufen; deshalb wird kein bestandener Browser-E2E-Test behauptet.
