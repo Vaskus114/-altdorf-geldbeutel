@@ -55,3 +55,12 @@ Jeder Current-Wert mit eingerechnetem Skill-/Talentbonus erhält ein `*`.
 - Kampfansicht verwendet jetzt `character.inventory` ohne Typfilter.
 - Generische Körper-Gegenstände werden ebenfalls angezeigt.
 - Equip-Button erscheint weiterhin nur für Waffen/Rüstung.
+
+## Beschreibungstest
+- Core-Skills in Datenbank: **133**
+- Core-Skills mit nicht-leerer Beschreibung: **133**
+- Core-Zauber in Datenbank: **155**
+- Core-Zauber mit nicht-leerer Beschreibung: **155**
+- `app.js`: JavaScript-Syntaxprüfung erfolgreich.
+- `wfrp1e-data.js`: JavaScript-Syntaxprüfung erfolgreich.
+- Stichproben geprüft: Dodge Blow, Disarm, Very Strong, Hypnotise, Fire Ball, Aura of Resistance, Cure Light Injury und Teleport.

@@ -357,3 +357,17 @@
 .hit-location-note{margin:9px 0 0;padding:8px 10px;border:1px solid rgba(69,53,36,.38);background:rgba(255,255,255,.10);color:#5e4d3e;font-size:10px;line-height:1.35}
 .hit-location-note strong{color:#2d2118;font-family:"Cinzel Decorative",Georgia,serif;font-size:9px}
 @media(max-width:560px){.hit-location-range{font-size:8px!important}.hit-location-note{font-size:9px}}
+
+/* Core-Regelbeschreibungen fuer Skills und Zauber */
+.skill-entry{display:block!important;padding:0!important;overflow:hidden}
+.skill-entry-main{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 10px 10px 12px}
+.rule-description{margin:0;border-top:1px solid rgba(69,53,36,.32);background:rgba(91,67,42,.055)}
+.rule-description summary{cursor:pointer;list-style:none;padding:8px 12px;color:#3b2b20;font-family:"Cinzel Decorative",Georgia,serif;font-size:10px;font-weight:700;letter-spacing:.04em;user-select:none}
+.rule-description summary::-webkit-details-marker{display:none}
+.rule-description summary:before{content:"+";display:inline-block;width:16px;margin-right:4px;font-family:Georgia,serif;font-size:14px;line-height:1}
+.rule-description[open] summary:before{content:"−"}
+.rule-description p{margin:0!important;padding:0 12px 12px;color:#3f342b;font-size:11px!important;line-height:1.52!important;white-space:normal}
+.spell-description{margin:8px 0 2px;border:1px solid rgba(69,53,36,.32)}
+.spell-description summary{padding:7px 9px}
+.spell-description p{padding:0 9px 9px}
+@media(max-width:560px){.skill-entry-main{grid-template-columns:1fr}.skill-entry-main .item-actions{justify-content:flex-end}.rule-description summary{font-size:9px}.rule-description p{font-size:10px!important}}

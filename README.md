@@ -78,3 +78,8 @@ Der Profilbereich passt sich jetzt an Desktop, Tablet und Smartphone an. Auf bre
 - Der frei eingegebene Roh-Startwert bleibt im Editor erhalten; die effektive Start-Anzeige wird separat darunter gezeigt.
 - Die Rüstungsansicht zeigt die humanoiden Trefferzonen des WFRP-1E-Grundregelwerks: **Kopf 01-15, rechter Arm 16-35, linker Arm 36-55, Körper 56-80, rechtes Bein 81-90, linkes Bein 91-00**.
 - Zur Trefferzonenermittlung werden bei einem erfolgreichen Angriff die beiden Ziffern des Angriffswurfs vertauscht (z. B. 27 -> 72).
+
+## Beschreibungen für Skills und Zauber
+Die Core-Datenbank enthält jetzt Beschreibungen für alle **133 Skills** und alle **155 Zauber** des WFRP-1E-Grundregelwerks. Im Charakterbogen bleiben die Listen kompakt; über den aufklappbaren Bereich **Beschreibung & Regelwirkung** bzw. **Beschreibung & Wirkung** lässt sich der Regeltext direkt am Eintrag anzeigen. Bereits vorhandene Core-Einträge werden beim Laden automatisch ergänzt, sofern ihre Beschreibung bisher leer war.
+
+Die Zauberbeschreibungen sind bewusst kompakt auf die wesentliche Wirkung ausgerichtet. MP, Reichweite, Dauer und Zutaten bleiben weiterhin in ihren eigenen Feldern und können wie alle Charakterdaten manuell angepasst werden.

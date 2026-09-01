@@ -94,3 +94,12 @@
 - Gegenstände, die über **Truhen & Lager → Am Körper** hinzugefügt werden, erscheinen dadurch sofort auch im Charakterbogen.
 - Waffen und Rüstungen behalten dort ihre Anlegen/Ablegen-Funktion; normale Gegenstände werden mit Menge, ENC, Wert und Notiz angezeigt.
 - Beide Menüs greifen auf dasselbe Inventarobjekt zu; es gibt keine doppelte Datenhaltung.
+
+## Skill- & Zauberbeschreibungen
+- Für alle 133 Core-Skills ist jetzt eine Regelbeschreibung aus dem WFRP-1E-Grundregelwerk hinterlegt.
+- Für alle 155 Core-Zauber ist jetzt eine kompakte Regel-/Wirkungsbeschreibung hinterlegt.
+- Bereits gespeicherte Core-Skills und Core-Zauber erhalten fehlende Beschreibungen beim Laden automatisch aus der Core-Datenbank.
+- Im Charakterbogen sind die Texte platzsparend über **Beschreibung & Regelwirkung** bzw. **Beschreibung & Wirkung** aufklappbar.
+- Skill-Beschreibungen bleiben im Editor frei bearbeitbar; eigene Skills können ebenfalls eigene Beschreibungen erhalten.
+- Zauberbeschreibungen bleiben wie bisher frei bearbeitbar.
+- Alte Core-Zauber, die bisher nur den Platzhaltertext bzw. die frühere Kurznotiz gespeichert hatten, werden beim Laden automatisch auf die neue Core-Beschreibung aktualisiert. Eigene manuell bearbeitete Beschreibungen bleiben erhalten.
