@@ -371,3 +371,55 @@
 .spell-description summary{padding:7px 9px}
 .spell-description p{padding:0 9px 9px}
 @media(max-width:560px){.skill-entry-main{grid-template-columns:1fr}.skill-entry-main .item-actions{justify-content:flex-end}.rule-description summary{font-size:9px}.rule-description p{font-size:10px!important}}
+
+/* Belastung nach WFRP 1E: effektive Movement Allowance, Originalwert bleibt sichtbar */
+.movement-encumbered{display:inline-flex!important;flex-direction:column;align-items:center!important;justify-content:center;gap:1px;line-height:1.05;color:#6a241e}
+.movement-encumbered>strong{font:inherit;font-weight:700;color:#6a241e}
+.movement-encumbered>small{display:block;margin-top:2px;color:#765346;font-family:"IM Fell English",Georgia,serif;font-size:7px!important;font-weight:400;line-height:1.1;white-space:normal}
+.profile-table .profile-current-row td:has(.movement-encumbered){background:rgba(120,64,47,.09)}
+.profile-stat-card .movement-encumbered{width:100%}
+.profile-stat-card .movement-encumbered>strong{font-size:17px}
+.profile-stat-card .movement-encumbered>small{font-size:7px!important}
+.encumbrance-strip{grid-template-columns:repeat(5,minmax(0,1fr))}
+.encumbrance-strip .movement-card.penalized{border-color:rgba(105,47,35,.65);background:rgba(125,65,48,.12)}
+.encumbrance-strip .movement-card.penalized strong{color:#6a241e}
+.encumbrance-warning p{max-width:82ch}
+
+/* Charakterportrait */
+.profile-character-layout{display:grid;grid-template-columns:minmax(150px,190px) minmax(0,1fr);gap:14px;align-items:start}
+.profile-character-details{min-width:0}
+.character-portrait-card{display:flex;min-width:0;flex-direction:column;gap:7px;padding:8px;border:1px solid rgba(69,53,36,.6);background:rgba(255,255,255,.12)}
+.portrait-image-button{display:block;width:100%;aspect-ratio:4/5;padding:0;border:1px solid rgba(53,39,27,.75);background:rgba(51,38,27,.15);overflow:hidden;cursor:zoom-in}
+.portrait-image-button img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.portrait-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.portrait-actions .mini-button{width:100%;min-width:0;padding-inline:4px}
+.portrait-actions .danger{grid-column:1/-1}
+.empty-portrait{align-items:center;justify-content:center;min-height:240px;text-align:center}
+.empty-portrait .portrait-placeholder{display:grid;place-items:center;width:92px;height:116px;border:1px dashed rgba(76,57,38,.55);background:rgba(66,49,33,.08);color:#765e47;font-family:Georgia,serif;font-size:48px}
+.empty-portrait>strong{font-family:"Cinzel Decorative",Georgia,serif;font-size:11px;color:#2b2017}
+.empty-portrait>small{color:#6b5a48;font-size:9px}
+.portrait-viewer{width:min(94vw,860px);max-height:94dvh}
+.portrait-viewer-frame{display:grid;place-items:center;min-height:260px;max-height:72dvh;padding:10px;border:1px solid rgba(62,46,31,.65);background:rgba(28,21,16,.86);overflow:auto}
+.portrait-viewer-frame img{display:block;max-width:100%;max-height:68dvh;width:auto;height:auto;object-fit:contain;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.portrait-file-name{margin:8px 0 0;color:#665443;font-size:10px;text-align:center;overflow-wrap:anywhere}
+
+@media(max-width:900px){
+  .encumbrance-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .profile-character-layout{grid-template-columns:150px minmax(0,1fr);gap:10px}
+}
+@media(max-width:620px){
+  .profile-character-layout{grid-template-columns:1fr}
+  .character-portrait-card{width:min(100%,260px);margin-inline:auto}
+  .empty-portrait{min-height:190px}
+  .portrait-image-button{aspect-ratio:3/4}
+  .encumbrance-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:390px){
+  .encumbrance-strip{grid-template-columns:1fr 1fr}
+  .portrait-viewer{width:100%;max-height:100dvh}
+}
+@media print{
+  .portrait-actions,.empty-portrait .mini-button{display:none!important}
+  .character-portrait-card{background:#fff}
+  .portrait-image-button{cursor:default}
+}

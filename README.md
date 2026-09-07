@@ -83,3 +83,11 @@ Der Profilbereich passt sich jetzt an Desktop, Tablet und Smartphone an. Auf bre
 Die Core-Datenbank enthält jetzt Beschreibungen für alle **133 Skills** und alle **155 Zauber** des WFRP-1E-Grundregelwerks. Im Charakterbogen bleiben die Listen kompakt; über den aufklappbaren Bereich **Beschreibung & Regelwirkung** bzw. **Beschreibung & Wirkung** lässt sich der Regeltext direkt am Eintrag anzeigen. Bereits vorhandene Core-Einträge werden beim Laden automatisch ergänzt, sofern ihre Beschreibung bisher leer war.
 
 Die Zauberbeschreibungen sind bewusst kompakt auf die wesentliche Wirkung ausgerichtet. MP, Reichweite, Dauer und Zutaten bleiben weiterhin in ihren eigenen Feldern und können wie alle Charakterdaten manuell angepasst werden.
+
+## Belastung und Movement
+
+Die App berechnet die am Körper getragene ENC-Last einschließlich als „getragen“ markierter Rucksäcke. Liegt die Last über der Traglast, wird die Movement Allowance automatisch reduziert. Der Profilwert M selbst wird nicht überschrieben: Bei einer Strafe zeigt der Charakterbogen sowohl das effektive Movement als auch den Originalwert. Zwerge werden über das Volk-Feld erkannt und erhalten die WFRP-1E-Traglast von Stärke × 200.
+
+## Charakterportrait
+
+Im Profil des Charakterbogens kann ein Bild hochgeladen werden. Das Portrait lässt sich direkt aus dem Profil groß aufrufen, ersetzen oder entfernen. Vor dem lokalen Speichern wird es auf maximal 900 px verkleinert und komprimiert, um den Browser-Speicher zu schonen. Da es im Charakterbogen-Datensatz liegt, ist es in der normalen Charakter-Sicherungsdatei enthalten.

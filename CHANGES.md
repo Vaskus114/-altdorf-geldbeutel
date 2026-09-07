@@ -103,3 +103,13 @@
 - Skill-Beschreibungen bleiben im Editor frei bearbeitbar; eigene Skills können ebenfalls eigene Beschreibungen erhalten.
 - Zauberbeschreibungen bleiben wie bisher frei bearbeitbar.
 - Alte Core-Zauber, die bisher nur den Platzhaltertext bzw. die frühere Kurznotiz gespeichert hatten, werden beim Laden automatisch auf die neue Core-Beschreibung aktualisiert. Eigene manuell bearbeitete Beschreibungen bleiben erhalten.
+
+## Belastung & Charakterportrait
+
+- Überladung reduziert jetzt die angezeigte **Movement Allowance** nach WFRP 1E: Für je 50 ENC oder angefangene 50 ENC über der Traglast wird Movement um 1 reduziert.
+- Der gespeicherte/originale M-Wert bleibt unverändert und wird bei einer Belastungsstrafe weiterhin sichtbar angezeigt.
+- Die Belastungsbox im Kampf-Tab zeigt Original-M, effektives Movement, ENC-Überschreitung und den berechneten Abzug.
+- Zwerge werden bei `Volk` als `Zwerg/Zwerge/Dwarf/Dwarfs` erkannt und verwenden regelkonform Stärke × 200 statt Stärke × 100 als Traglastgrenze.
+- Im Profil kann pro Charakter ein Portrait hochgeladen, angezeigt, ersetzt und entfernt werden.
+- Portraits werden vor dem Speichern auf maximal 900 px Kantenlänge verkleinert und als komprimiertes JPEG im lokalen Charakterdatensatz gespeichert.
+- Das Portrait ist dadurch Bestandteil der bestehenden Charakter-Sicherung und wird beim Wiederherstellen mit übernommen.
