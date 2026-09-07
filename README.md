@@ -91,3 +91,14 @@ Die App berechnet die am Körper getragene ENC-Last einschließlich als „getra
 ## Charakterportrait
 
 Im Profil des Charakterbogens kann ein Bild hochgeladen werden. Das Portrait lässt sich direkt aus dem Profil groß aufrufen, ersetzen oder entfernen. Vor dem lokalen Speichern wird es auf maximal 900 px verkleinert und komprimiert, um den Browser-Speicher zu schonen. Da es im Charakterbogen-Datensatz liegt, ist es in der normalen Charakter-Sicherungsdatei enthalten.
+
+
+## Gegenstandslisten aus dem Consumer Guide
+
+Die Gegenstands-Vorlagen enthalten jetzt zusätzlich die `Subsistence`-Tabelle von S. 293 sowie alle Untertabellen von `Miscellaneous Items` auf S. 296 des WFRP-1E-Grundregelwerks. In der Auswahl sind sie nach Originalkategorie gruppiert. Preis und ENC werden beim Auswählen übernommen; Availability und Quellen-Seite stehen in der Notiz und können wie alle anderen Felder frei geändert werden.
+
+## Waffen, Rüstung und Gambeson
+
+Die Preset-Listen wurden erneut gegen das Grundregelwerk geprüft. Die Consumer-Guide-Tabellen auf S. 295 sind vollständig abgebildet; Waffenwerte werden zusätzlich mit den Kampf-Tabellen auf S. 120 und S. 128 abgeglichen.
+
+Gambeson ist eine bewusst als Hausregel ergänzte Materialart. Ein eingetragener Schutzpunkt wird ohne Metall als 0/1 angezeigt. Deckt auf derselben Trefferzone zusätzlich Metallrüstung, wird der Gambeson dort als fester +1 AP gerechnet. Leder verhält sich weiterhin wie im Grundregelwerk und gibt unter Metall keinen Zusatzschutz.

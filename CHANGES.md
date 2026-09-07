@@ -113,3 +113,26 @@
 - Im Profil kann pro Charakter ein Portrait hochgeladen, angezeigt, ersetzt und entfernt werden.
 - Portraits werden vor dem Speichern auf maximal 900 px Kantenlänge verkleinert und als komprimiertes JPEG im lokalen Charakterdatensatz gespeichert.
 - Das Portrait ist dadurch Bestandteil der bestehenden Charakter-Sicherung und wird beim Wiederherstellen mit übernommen.
+
+
+## Consumer-Guide-Erweiterung: Subsistence & Miscellaneous Items
+
+- Gegenstands-Presets aus `Subsistence` auf Grundregelwerk S. 293 ergänzt (inkl. Iron Rations, Getränke, Unterkunft/Stabling und Fodder).
+- Sämtliche Tabellen unter `Miscellaneous Items` auf Grundregelwerk S. 296 ergänzt: Carrying Equipment, Household Items and Personal Equipment, Illumination, Musical Instruments, Tools sowie Reading and Writing.
+- Preis, ENC und Availability wurden aus den Tabellen übernommen. Availability und Seitenquelle stehen als Notiz am Preset.
+- Preset-Auswahl ist jetzt nach den Original-Tabellen gruppiert, damit die große Liste übersichtlich bleibt.
+- Bei Preisbereichen verwendet das Preset einen sinnvollen Ausgangswert und dokumentiert den Tabellenbereich in der Notiz; alle Werte bleiben frei editierbar.
+
+## Waffen-/Rüstungsvollständigkeit & Gambeson
+
+- Armour- und Weapons-Presets erneut mit dem WFRP-1E-Grundregelwerk abgeglichen (Kampf S. 120/121/128 sowie Consumer Guide S. 295).
+- Fehlende Consumer-Guide-Rüstung ergänzt: Back Plate, Gauntlets, Knight's Helm und Unrimmed Shield.
+- Bezeichnungen der vorhandenen Teile an die Tabellenbezeichnungen angenähert (u. a. Leather Jacket/Jack, Mail Sleeve/Arm Bracers, Vambrace, Cuisse & Greaves, Pot Helmet).
+- Fehlende Waffen ergänzt: Sword, Foil, Garotte, Hook und Knuckle Duster.
+- Scabbard als Waffen-Zubehör ergänzt.
+- Zusätzlich eigenes Preset „Improvised Missile“ für die vollständige Missile Weapon Chart ergänzt.
+- Repeating Crossbow korrigiert: Effective Strength 1 (nicht 4).
+- Halberd korrigiert: To Hit -10/0** statt -10/+10**.
+- Gambeson als eigener Rüstungstyp eingebaut: allein 0/1 AP wie Leder; auf überdeckten Trefferzonen unter Metall als fester +1 AP (Hausregel).
+- Leder bleibt unter Metall ohne zusätzlichen Schutz.
+- Back Plate und Gauntlets werden zwar vollständig aus der Einkaufstabelle angeboten, erhalten aber keine erfundenen AP: Das Kampfkapitel weist ihnen keinen eigenen AP-/Trefferzoneneintrag zu. Die Werte bleiben frei editierbar.

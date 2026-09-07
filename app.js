@@ -63,7 +63,7 @@
     type:["generic","armor","weapon"].includes(item?.type)?item.type:"generic",
     presetId:String(item?.presetId||"").slice(0,80),
     equipped:Boolean(item?.equipped),
-    armourMaterial:["metal","leather","shield","custom"].includes(item?.armourMaterial)?item.armourMaterial:"custom",
+    armourMaterial:["metal","leather","gambeson","shield","custom"].includes(item?.armourMaterial)?item.armourMaterial:"custom",
     armour:sanitizeArmour(item?.armour),
     weapon:sanitizeWeapon(item?.weapon)
   });
@@ -271,27 +271,33 @@
   const presetById = presetId => allItemPresets().find(preset=>preset.id===presetId);
   const allowedLayer = (a,b) => RULES.allowedLayerPairs.some(pair=>pair.includes(a)&&pair.includes(b));
   const armourBreakdown = character => {
-    const result=Object.fromEntries(RULES.locations.map(location=>[location,{fixed:0,leather:false,leatherSuppressed:false,effects:0,manual:num(character.sheet.armourManual?.[location],0),metal:false}]));
+    const result=Object.fromEntries(RULES.locations.map(location=>[location,{fixed:0,leather:false,leatherSuppressed:false,gambeson:false,gambesonLayered:false,effects:0,manual:num(character.sheet.armourManual?.[location],0),metal:false}]));
     character.inventory.filter(item=>item.equipped&&item.type==="armor").forEach(item=>{
       RULES.locations.forEach(location=>{
         const points=num(item.armour?.[location],0); if(!points) return;
         if(item.armourMaterial==="leather"){ result[location].leather=true; return; }
+        if(item.armourMaterial==="gambeson"){ result[location].gambeson=true; return; }
         result[location].fixed+=points;
         if(item.armourMaterial==="metal") result[location].metal=true;
       });
     });
     const effectBonus=character.sheet.spells.filter(spell=>spell.active).reduce((sum,spell)=>sum+num(spell.armourBonus,0),0);
     RULES.locations.forEach(location=>{
-      result[location].effects=effectBonus;
-      if(result[location].leather&&result[location].metal) result[location].leatherSuppressed=true;
-      result[location].total=Math.max(0,result[location].fixed+result[location].effects+result[location].manual);
+      const part=result[location];
+      part.effects=effectBonus;
+      if(part.leather&&part.metal) part.leatherSuppressed=true;
+      // Hausregel: Gambeson wirkt allein wie Leder (0/1). Unter Metall wird daraus ein fester +1 AP.
+      if(part.gambeson&&part.metal){ part.gambesonLayered=true; part.fixed+=1; }
+      part.total=Math.max(0,part.fixed+part.effects+part.manual);
     });
     return result;
   };
   const armourDisplay = part => {
     const base=part.total;
-    if(part.leather&&!part.leatherSuppressed) return `${base?`${base} + `:""}0/1`;
-    return String(base);
+    const conditional=[];
+    if(part.leather&&!part.leatherSuppressed) conditional.push("0/1");
+    if(part.gambeson&&!part.gambesonLayered) conditional.push("0/1");
+    return conditional.length ? `${base?`${base} + `:""}${conditional.join(" + ")}` : String(base);
   };
   const armourWarnings = character => {
     const equipped=character.inventory.filter(item=>item.equipped&&item.type==="armor"&&item.armourMaterial==="metal");
@@ -503,7 +509,16 @@
     return `${sheetBox("Grundregelwerk",escapeHtml(c.name),`<button class="mini-button" id="choose-career">Karriere wählen</button>`,intro,"career-box")}${sheetBox("Advance Scheme","Advanced",`<button class="mini-button" id="edit-career-scheme">Werte bearbeiten</button>`,schemeBody,"career-scheme-box")}${sheetBox("Karriere-Skills",`${skills.filter(skill=>!learned.has(skill.name)).length} offen`,"",skillBody,"career-skill-box")}${sheetBox("Frühere Karrieren",`${history.length} gespeichert`,"",historyBody,"career-history-box")}`;
   };
   const HIT_LOCATION_RANGES = {head:"01-15",rightArm:"16-35",leftArm:"36-55",body:"56-80",rightLeg:"81-90",leftLeg:"91-00"};
-  const armourCard = (location,part) => `<article class="armour-zone zone-${location}"><div class="armour-zone-head"><small>${locationLabel(location)}</small><span class="hit-location-range">${HIT_LOCATION_RANGES[location]||"—"}</span></div><strong>${armourDisplay(part)}</strong><span>${part.effects?`Effekt ${signed(part.effects)} · `:""}${part.manual?`Manuell ${signed(part.manual)} · `:""}${part.leatherSuppressed?"Leder unter Metall ohne Zusatzschutz":"AP gesamt"}</span></article>`;
+  const armourCard = (location,part) => {
+    const notes=[];
+    if(part.effects)notes.push(`Effekt ${signed(part.effects)}`);
+    if(part.manual)notes.push(`Manuell ${signed(part.manual)}`);
+    if(part.leatherSuppressed)notes.push("Leder unter Metall ohne Zusatzschutz");
+    if(part.gambesonLayered)notes.push("Gambeson unter Metall +1 AP");
+    else if(part.gambeson)notes.push("Gambeson 0/1 AP");
+    if(!notes.length)notes.push("AP gesamt");
+    return `<article class="armour-zone zone-${location}"><div class="armour-zone-head"><small>${locationLabel(location)}</small><span class="hit-location-range">${HIT_LOCATION_RANGES[location]||"—"}</span></div><strong>${armourDisplay(part)}</strong><span>${notes.join(" · ")}</span></article>`;
+  };
   const weaponSummary = (character,item) => {
     const w=item.weapon;if(w.mode==="missile")return `ES ${escapeHtml(w.effectiveStrength||"—")} · Reichweite ${escapeHtml(w.rangeShort||"—")}/${escapeHtml(w.rangeLong||"—")}/${escapeHtml(w.rangeExtreme||"—")} · ${escapeHtml(w.load||"—")}${weaponSkillWarning(character,item)}`;
     const s=statValue(character,"S"),damage=String(w.damage||"0").trim();return `Schaden 1W6 + ${s}${damage&&damage!=="0"?` ${signed(damage)}`:""} · I ${escapeHtml(w.initiative||"0")} · Treffer ${escapeHtml(w.toHit||"0")} · Parade ${escapeHtml(w.parry||"0")}${weaponSkillWarning(character,item)}`;
@@ -749,18 +764,29 @@
     if(!isBody){ if(storage.type==="backpack") $("#toggle-carried",layer).addEventListener("click",()=>{storage.carried=!storage.carried;persist();layer.remove();render();locationSheet(locationId)}); $("#money-in",layer).addEventListener("click",()=>storageMoneySheet(storage,"in",layer)); $("#money-out",layer).addEventListener("click",()=>storageMoneySheet(storage,"out",layer)); $("#delete-storage",layer).addEventListener("click",()=>{if(storage.items.length||storage.money){alert("Leere das Lager zuerst: Gegenstände verschieben und Geld entnehmen.");return}if(confirm(`${storage.name} wirklich löschen?`)){character.storages=character.storages.filter(s=>s.id!==storage.id);persist();layer.remove();render();storageSheet()}}); }
   };
 
-  const presetOptions = selected => `<option value="">— frei / kein Preset —</option><optgroup label="Rüstung">${RULES.armourPresets.map(p=>`<option value="${p.id}" ${p.id===selected?"selected":""}>${escapeHtml(p.name)}</option>`).join("")}</optgroup><optgroup label="Waffen">${RULES.weaponPresets.map(p=>`<option value="${p.id}" ${p.id===selected?"selected":""}>${escapeHtml(p.name)}</option>`).join("")}</optgroup><optgroup label="Ausrüstung">${(RULES.equipmentPresets||[]).map(p=>`<option value="${p.id}" ${p.id===selected?"selected":""}>${escapeHtml(p.name)}</option>`).join("")}</optgroup>`;
+  const presetOption = (preset,selected) => `<option value="${escapeHtml(preset.id)}" ${preset.id===selected?"selected":""}>${escapeHtml(preset.name)}</option>`;
+  const equipmentPresetGroups = () => {
+    const groups=[];
+    (RULES.equipmentPresets||[]).forEach(preset=>{
+      const label=preset.category||"Ausrüstung";
+      let group=groups.find(entry=>entry.label===label);
+      if(!group){group={label,items:[]};groups.push(group)}
+      group.items.push(preset);
+    });
+    return groups;
+  };
+  const presetOptions = selected => `<option value="">— frei / kein Preset —</option><optgroup label="Rüstung">${RULES.armourPresets.map(p=>presetOption(p,selected)).join("")}</optgroup><optgroup label="Waffen">${RULES.weaponPresets.map(p=>presetOption(p,selected)).join("")}</optgroup>${equipmentPresetGroups().map(group=>`<optgroup label="${escapeHtml(group.label)}">${group.items.map(p=>presetOption(p,selected)).join("")}</optgroup>`).join("")}`;
   const itemEditor = (locationId,itemId,previous,returnContext={locationId}) => {
     const character=active(); const target=locationId==="body"?character.inventory:character.storages.find(s=>s.id===locationId)?.items; if(!target)return;
     const existing=target.find(item=>item.id===itemId); const item=existing||sanitizeItem({name:"",type:"generic",equipped:false});
     const material=item.armourMaterial||"custom"; const w=item.weapon;
     const layer=modal(`<form class="sheet form equipment-form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Inventar &amp; Charakterbogen</span><h2>${existing?"Gegenstand bearbeiten":"Gegenstand hinzufügen"}</h2></div><button type="button" class="close">×</button></div><label>Vorlage<select name="presetId">${presetOptions(item.presetId)}</select></label><div class="form-grid two"><label>Name<input name="name" required value="${escapeHtml(item.name)}" placeholder="z. B. Kettenmantel"></label><label>Art<select name="type"><option value="generic" ${item.type==="generic"?"selected":""}>Allgemein</option><option value="armor" ${item.type==="armor"?"selected":""}>Rüstung / Schild</option><option value="weapon" ${item.type==="weapon"?"selected":""}>Waffe</option></select></label><label>Anzahl<input name="quantity" type="number" min="1" max="9999" value="${item.quantity}"></label><label>ENC je Stück<input name="enc" type="number" min="0" max="99999" step="1" value="${item.enc}"></label></div><span class="eyebrow">Wert je Stück</span>${moneyFields(item.value)}${locationId==="body"?`<label class="check-line"><input name="equipped" type="checkbox" ${item.equipped?"checked":""}><span>Aktiv angelegt / griffbereit</span></label>`:""}
-      <section id="armor-fields" class="nested-fields"><div class="section-title"><div><span class="eyebrow">Automatik</span><h3>Rüstungswerte</h3></div></div><label>Material / Regelart<select name="armourMaterial"><option value="metal" ${material==="metal"?"selected":""}>Metall (feste AP)</option><option value="leather" ${material==="leather"?"selected":""}>Leder (0/1 AP)</option><option value="shield" ${material==="shield"?"selected":""}>Schild / feste AP</option><option value="custom" ${material==="custom"?"selected":""}>Frei / magisch</option></select></label><div class="form-grid two">${RULES.locations.map(location=>`<label>${locationLabel(location)} AP<input name="ap-${location}" type="number" min="0" max="20" value="${item.armour[location]||0}"></label>`).join("")}</div><p class="hint">Bei Leder wird ein eingetragener Schutzpunkt als 0/1-Regel behandelt. Metall über Leder unterdrückt den zusätzlichen Lederschutz automatisch.</p></section>
+      <section id="armor-fields" class="nested-fields"><div class="section-title"><div><span class="eyebrow">Automatik</span><h3>Rüstungswerte</h3></div></div><label>Material / Regelart<select name="armourMaterial"><option value="metal" ${material==="metal"?"selected":""}>Metall (feste AP)</option><option value="leather" ${material==="leather"?"selected":""}>Leder (0/1 AP)</option><option value="gambeson" ${material==="gambeson"?"selected":""}>Gambeson (0/1; unter Metall +1 AP)</option><option value="shield" ${material==="shield"?"selected":""}>Schild / feste AP</option><option value="custom" ${material==="custom"?"selected":""}>Frei / magisch</option></select></label><div class="form-grid two">${RULES.locations.map(location=>`<label>${locationLabel(location)} AP<input name="ap-${location}" type="number" min="0" max="20" value="${item.armour[location]||0}"></label>`).join("")}</div><p class="hint">Leder und Gambeson verwenden bei eingetragenem Schutzpunkt die 0/1-Regel. Leder unter Metall gibt keinen Zusatzschutz. Gambeson ist eine Hausregel: allein 0/1, unter Metall wird er auf den überdeckten Trefferzonen zu einem festen +1 AP.</p></section>
       <section id="weapon-fields" class="nested-fields"><div class="section-title"><div><span class="eyebrow">Automatik</span><h3>Waffenwerte</h3></div></div><div class="form-grid two"><label>Modus<select name="weaponMode"><option value="melee" ${w.mode==="melee"?"selected":""}>Nahkampf</option><option value="missile" ${w.mode==="missile"?"selected":""}>Fernkampf</option></select></label><label>Spezialwaffe / Skill<input name="weaponSkill" value="${escapeHtml(w.skill)}"></label><label>Initiative-Mod.<input name="weaponInitiative" value="${escapeHtml(w.initiative)}"></label><label>Treffer-Mod.<input name="weaponToHit" value="${escapeHtml(w.toHit)}"></label><label>Schaden-Mod.<input name="weaponDamage" value="${escapeHtml(w.damage)}"></label><label>Parade-Mod.<input name="weaponParry" value="${escapeHtml(w.parry)}"></label><label>Effektive Stärke<input name="weaponES" value="${escapeHtml(w.effectiveStrength)}"></label><label>Lade-/Feuerzeit<input name="weaponLoad" value="${escapeHtml(w.load)}"></label><label>Reichweite kurz<input name="rangeShort" value="${escapeHtml(w.rangeShort)}"></label><label>Reichweite lang<input name="rangeLong" value="${escapeHtml(w.rangeLong)}"></label><label>Reichweite extrem<input name="rangeExtreme" value="${escapeHtml(w.rangeExtreme)}"></label></div></section>
       <label>Notiz<textarea name="note">${escapeHtml(item.note)}</textarea></label><button class="full-button">Speichern</button></form>`);
     layer.classList.add("high"); const form=$("form",layer); const typeSelect=form.elements.type; const presetSelect=form.elements.presetId;
     const toggleFields=()=>{$("#armor-fields",form).classList.toggle("hidden",typeSelect.value!=="armor");$("#weapon-fields",form).classList.toggle("hidden",typeSelect.value!=="weapon")};
-    const applyPreset=presetId=>{const preset=presetById(presetId);if(!preset)return;form.elements.name.value=preset.name;form.elements.type.value=preset.type;form.elements.enc.value=preset.enc||0;if(Number.isSafeInteger(preset.value)){const coins=splitCoins(preset.value);form.elements.gold.value=coins.gold||"";form.elements.silver.value=coins.silver||"";form.elements.brass.value=coins.brass||""} if(preset.type==="armor"){form.elements.armourMaterial.value=preset.material||"custom";RULES.locations.forEach(location=>form.elements[`ap-${location}`].value=preset.armour?.[location]||0)} if(preset.type==="weapon"){const pw=preset.weapon||{};form.elements.weaponMode.value=pw.mode||"melee";form.elements.weaponSkill.value=pw.skill||"";form.elements.weaponInitiative.value=pw.initiative||"0";form.elements.weaponToHit.value=pw.toHit||"0";form.elements.weaponDamage.value=pw.damage||"0";form.elements.weaponParry.value=pw.parry||"0";form.elements.weaponES.value=pw.effectiveStrength||"S";form.elements.weaponLoad.value=pw.load||"";form.elements.rangeShort.value=pw.rangeShort||"";form.elements.rangeLong.value=pw.rangeLong||"";form.elements.rangeExtreme.value=pw.rangeExtreme||""} if(preset.note)form.elements.note.value=preset.note;toggleFields()};
+    const applyPreset=presetId=>{const preset=presetById(presetId);if(!preset)return;form.elements.name.value=preset.name;form.elements.type.value=preset.type;form.elements.enc.value=preset.enc||0;if(Number.isSafeInteger(preset.value)){const coins=splitCoins(preset.value);form.elements.gold.value=coins.gold||"";form.elements.silver.value=coins.silver||"";form.elements.brass.value=coins.brass||""} if(preset.type==="armor"){form.elements.armourMaterial.value=preset.material||"custom";RULES.locations.forEach(location=>form.elements[`ap-${location}`].value=preset.armour?.[location]||0)} if(preset.type==="weapon"){const pw=preset.weapon||{};form.elements.weaponMode.value=pw.mode||"melee";form.elements.weaponSkill.value=pw.skill||"";form.elements.weaponInitiative.value=pw.initiative||"0";form.elements.weaponToHit.value=pw.toHit||"0";form.elements.weaponDamage.value=pw.damage||"0";form.elements.weaponParry.value=pw.parry||"0";form.elements.weaponES.value=pw.effectiveStrength||"S";form.elements.weaponLoad.value=pw.load||"";form.elements.rangeShort.value=pw.rangeShort||"";form.elements.rangeLong.value=pw.rangeLong||"";form.elements.rangeExtreme.value=pw.rangeExtreme||""} form.elements.note.value=preset.note||"";toggleFields()};
     toggleFields(); typeSelect.addEventListener("change",toggleFields); presetSelect.addEventListener("change",()=>applyPreset(presetSelect.value)); $(".close",layer).addEventListener("click",()=>layer.remove());
     form.addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements;const saved=sanitizeItem({id:existing?.id||id(),name:f.name.value.trim(),quantity:num(f.quantity.value,1),enc:num(f.enc.value,0),value:amountFromForm(event.currentTarget),note:f.note.value.trim(),type:f.type.value,presetId:f.presetId.value,equipped:locationId==="body"?Boolean(f.equipped?.checked):false,armourMaterial:f.armourMaterial.value,armour:Object.fromEntries(RULES.locations.map(location=>[location,num(f[`ap-${location}`].value,0)])),weapon:{mode:f.weaponMode.value,skill:f.weaponSkill.value,specialist:String(f.weaponSkill.value).toLowerCase().includes("specialist weapon"),initiative:f.weaponInitiative.value,toHit:f.weaponToHit.value,damage:f.weaponDamage.value,parry:f.weaponParry.value,effectiveStrength:f.weaponES.value,load:f.weaponLoad.value,rangeShort:f.rangeShort.value,rangeLong:f.rangeLong.value,rangeExtreme:f.rangeExtreme.value}});if(existing)Object.assign(existing,saved);else target.push(saved);persist();layer.remove();previous.remove();render();if(returnContext.sheetTab)characterSheet(returnContext.sheetTab);else locationSheet(returnContext.locationId||locationId)});
   };

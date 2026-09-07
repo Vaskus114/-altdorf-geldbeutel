@@ -35,3 +35,32 @@ Der Original-M-Wert wird nicht verändert und bleibt im Profil sichtbar.
 - `node --check app.js`
 - `node --check wfrp1e-data.js`
 - ZIP-Integrität wird vor Ausgabe geprüft.
+
+
+## Consumer-Guide-Daten
+
+- Neue/erhaltene Ausrüstungs-Presets gesamt: 84
+- Subsistence S. 293: 10 Zeilen
+- Miscellaneous Items S. 296: 69 Zeilen (10 Carrying, 15 Household, 7 Illumination, 11 Musical Instruments, 23 Tools, 3 Reading/Writing)
+- Vorherige Munition/Zubehör-Presets beibehalten: 5
+- Doppelte Preset-IDs: 0
+
+## Waffen- und Rüstungsprüfung
+
+Abgleich mit dem Grundregelwerk:
+
+- Consumer Guide S. 295: alle Rüstungszeilen vorhanden.
+- Consumer Guide S. 295: alle Waffenzeilen vorhanden; Munition/Zubehör wird als allgemeines Equipment geführt.
+- Kampf S. 120: alle Einträge der Weapon Modifiers Table mit den Preset-Werten abgeglichen.
+- Kampf S. 128: alle Einträge der Missile Weapon Chart mit Reichweite und Effective Strength abgeglichen.
+- Korrigiert: Repeating Crossbow ES 1.
+- Korrigiert: Halberd To Hit -10/0**.
+- Fehlende Tabellenzeilen ergänzt: Sword, Foil, Garotte, Hook, Knuckle Duster, Scabbard, Back Plate, Gauntlets, Knight's Helm, Unrimmed Shield.
+- Back Plate und Gauntlets: keine automatischen AP erfunden, da die Trefferzonen-/AP-Tabelle des Kampfkapitels dafür keinen separaten Eintrag vorgibt.
+
+## Gambeson-Hausregel
+
+- Materialwert `gambeson` wird von Migration/Sanitizer akzeptiert.
+- Ohne Metall: 0/1 AP auf den im Gegenstand markierten Trefferzonen.
+- Mit Metall auf derselben Trefferzone: Gambeson wird dort als fester +1 AP addiert.
+- Anzeige nennt explizit „Gambeson unter Metall +1 AP“.
