@@ -147,3 +147,13 @@
 - Effekte werden unter Kampf → Magische Effekte aufgelistet, sobald die zugehörige Waffe/Rüstung aktiv angelegt bzw. griffbereit ist.
 - Der Bereich zeigt nun außerdem alle aktivierten Zauber, nicht nur Zauber mit Rüstungsbonus.
 - Beispielnamen wie Armour Piercing oder Warp Attack können frei eingetragen werden; die App erfindet dafür keine automatische Regelwirkung.
+
+## iPad-Tastatur & Gegenstandsbeschreibungen
+
+- Texteingaben in modalen Formularen erhalten auf iPadOS/iOS nun ein explizites Touch-Fokus-Handling. Dadurch wird Safari/PWA-Fällen entgegengewirkt, in denen ein Feld sichtbar fokussiert wird, die Bildschirmtastatur aber nicht erscheint.
+- Automatisches Fokussetzen beim Öffnen von Formularen ist auf iPadOS/iOS deaktiviert; die Tastatur wird stattdessen ausschließlich durch die Nutzerberührung ausgelöst.
+- Formulareingaben und Textareas sind für iOS explizit als Text-/Touch-Ziele konfiguriert; Scroll-Container nutzen iOS-kompatibles Momentum-Scrolling.
+- `index.html` enthält Cache-Busting für CSS/JS, `sw.js` verwendet einen neuen Cache-Namen, damit iPad-PWAs die Korrektur zuverlässig übernehmen.
+- Gegenstände besitzen jetzt ein eigenes Feld `Beschreibung & Regeln` zusätzlich zur kurzen Notiz.
+- Die Beschreibung wird im Charakterbogen unter Kampf sowie in Truhen & Lager als ausklappbarer Bereich angezeigt.
+- Bestehende Gegenstände bleiben kompatibel; fehlt das neue Feld, wird es leer ergänzt.

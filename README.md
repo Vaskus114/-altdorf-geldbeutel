@@ -109,3 +109,9 @@ Gambeson ist eine bewusst als Hausregel ergänzte Materialart. Ein eingetragener
 Im Karriere-Reiter lässt sich ein versehentlich gekaufter Advance mit „zurück“ wieder entfernen. Ein Schritt entspricht weiterhin +10 bei Prozentwerten bzw. +1 bei M/S/T/W/A; die 100 EP werden zurückerstattet.
 
 Waffen und Rüstungen können im Gegenstands-Editor mehrere besondere Effekte erhalten. Name, Kategorie, Beschreibung und Aktivstatus sind frei editierbar. Ist der Gegenstand angelegt oder griffbereit, erscheinen aktivierte Effekte zusammen mit aktiven Zaubern unter Kampf → Magische Effekte.
+
+## iPad-Eingabe und Gegenstandsregeln
+
+Für iPadOS/iOS wurde das Fokusverhalten der Texteingaben in den Dialogen angepasst. Die App setzt auf dem iPad beim Öffnen eines Formulars keinen künstlichen Autofokus mehr, sondern fokussiert Text- und Zahlenfelder direkt aus der Touch-Geste. Dies ist speziell für Safari bzw. zum Homescreen hinzugefügte PWAs gedacht.
+
+Jeder Gegenstand kann außerdem einen längeren Text unter **Beschreibung & Regeln** speichern. In den Inventarlisten und im Kampfbereich erscheint dieser Text wie bei Skills als aufklappbarer Abschnitt. Die separate kurze Notiz bleibt erhalten.

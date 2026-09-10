@@ -446,3 +446,72 @@
 .active-effect-head strong{font-size:14px;overflow-wrap:anywhere}
 .effect-kind{display:inline-block;padding:2px 5px;border:1px solid rgba(77,58,40,.55);background:rgba(76,59,42,.09);font-size:9px;letter-spacing:.06em;text-transform:uppercase}
 @media(max-width:760px){.item-effect-editor-head{grid-template-columns:1fr}.active-effects-list{grid-template-columns:1fr}}
+
+/* iPadOS / iOS: Texteingaben in den festen, scrollbareren Dialogen muessen echte
+   Touch-Fokusziele bleiben. Das verhindert den Safari/PWA-Fall, in dem ein Feld
+   sichtbar fokussiert wird, die Bildschirmtastatur aber nicht erscheint. */
+.form input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.form textarea{
+  -webkit-user-select:text;
+  user-select:text;
+  -webkit-touch-callout:default;
+  touch-action:auto;
+  pointer-events:auto;
+  caret-color:currentColor;
+}
+.sheet{
+  -webkit-overflow-scrolling:touch;
+}
+@supports (-webkit-touch-callout:none){
+  .modal{
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    min-height:100dvh;
+  }
+  .form input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .form textarea{
+    font-size:16px;
+  }
+  .sheet{
+    max-height:calc(100dvh - max(8px,env(safe-area-inset-top)));
+  }
+}
+
+/* Gegenstaende: ausklappbare Beschreibung & Regeln analog zu Skills/Zaubern. */
+.item-row.item-row-with-description,
+.equipment-row.equipment-row-with-description{
+  display:block;
+  padding:0;
+  overflow:hidden;
+}
+.item-row-main,
+.equipment-row-main{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.item-row-main{padding:11px}
+.equipment-row-main{padding:10px 10px 10px 12px}
+.item-row-main>span:first-child,
+.equipment-row-main>div:first-child{min-width:0}
+.item-rule-description{
+  margin:0;
+  border-left:0;
+  border-right:0;
+  border-bottom:0;
+}
+.item-rule-description summary{padding-inline:11px}
+.item-rule-description p{
+  overflow-wrap:anywhere;
+  white-space:pre-wrap;
+}
+@media(max-width:560px){
+  .item-row-main,
+  .equipment-row-main{grid-template-columns:minmax(0,1fr) auto;gap:6px}
+  .item-row-main{padding:10px 8px}
+  .equipment-row-main{padding:10px 8px}
+  .item-actions{flex-wrap:wrap;justify-content:flex-end}
+}

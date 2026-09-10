@@ -1,4 +1,4 @@
-const CACHE = "altdorf-geldbeutel-core-v15";
+const CACHE = "altdorf-geldbeutel-core-v14-ipad-items";
 const FILES = [
   "./",
   "./index.html",
@@ -20,15 +20,7 @@ const FILES = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE);
-    await Promise.all(FILES.map(async file => {
-      try {
-        const response = await fetch(file, {cache:"reload"});
-        if (response.ok) await cache.put(file, response);
-      } catch (_) {}
-    }));
-  })());
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
   self.skipWaiting();
 });
 

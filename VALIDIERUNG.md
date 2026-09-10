@@ -76,3 +76,16 @@ Geprüft:
 - Waffen/Rüstungen können mehrere Effekte mit Name, Kategorie, Beschreibung und Aktivstatus erhalten.
 - Nur Effekte aktiv angelegter/griffbereiter Waffen und Rüstungen erscheinen im Kampf-Reiter.
 - Im Bereich „Magische Effekte“ werden nun alle aktivierten Zauber sowie aktive Ausrüstungseffekte aufgeführt.
+
+## Prüfung iPad-Eingabe & Gegenstandsbeschreibungen
+
+- `app.js`: `node --check` bestanden.
+- `wfrp1e-data.js`: `node --check` bestanden.
+- Gegenstandsmodell enthält ein rückwärtskompatibles `description`-Feld.
+- Gegenstandseditor liest und speichert `description`.
+- Beschreibung wird sowohl in `Truhen & Lager` als auch im Kampf-Inventar über ein `<details>`-Element dargestellt.
+- iPadOS/iOS-Erkennung berücksichtigt klassische iPads sowie iPadOS mit Desktop-User-Agent (`MacIntel` + Touchpunkte).
+- Touch-Fokus wird delegiert am Dialog behandelt und funktioniert damit auch für dynamisch hinzugefügte Eingabefelder.
+- iPadOS/iOS-Autofokus beim Öffnen der betroffenen Formulare wurde entfernt.
+- Cache-Busting in `index.html` und neuer Service-Worker-Cache wurden gesetzt.
+- Ein echter iPad-Gerätetest ist in dieser Build-Umgebung nicht möglich; die Korrektur basiert auf dem identifizierten Safari/PWA-Fokusproblem und wurde statisch/syntaktisch geprüft.
