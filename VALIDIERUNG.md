@@ -64,3 +64,15 @@ Abgleich mit dem Grundregelwerk:
 - Ohne Metall: 0/1 AP auf den im Gegenstand markierten Trefferzonen.
 - Mit Metall auf derselben Trefferzone: Gambeson wird dort als fester +1 AP addiert.
 - Anzeige nennt explizit „Gambeson unter Metall +1 AP“.
+
+## Advance-Korrektur & Gegenstandseffekte
+
+Geprüft:
+
+- `app.js` und `wfrp1e-data.js` bestehen `node --check`.
+- Karriereansicht enthält einen separaten Rücknahme-Button pro kaufbarem Profilwert.
+- Eine Rücknahme reduziert `purchased` um genau einen regeltypischen Schritt (+10 bzw. +1) und erhöht `xpAvailable` um die Advance-Kosten.
+- Gegenstandseffekte werden durch `sanitizeItem()` dauerhaft mitgespeichert und damit auch von der bestehenden Backup-/Restore-Logik erfasst.
+- Waffen/Rüstungen können mehrere Effekte mit Name, Kategorie, Beschreibung und Aktivstatus erhalten.
+- Nur Effekte aktiv angelegter/griffbereiter Waffen und Rüstungen erscheinen im Kampf-Reiter.
+- Im Bereich „Magische Effekte“ werden nun alle aktivierten Zauber sowie aktive Ausrüstungseffekte aufgeführt.

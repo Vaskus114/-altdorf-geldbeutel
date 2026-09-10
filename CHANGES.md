@@ -136,3 +136,14 @@
 - Gambeson als eigener Rüstungstyp eingebaut: allein 0/1 AP wie Leder; auf überdeckten Trefferzonen unter Metall als fester +1 AP (Hausregel).
 - Leder bleibt unter Metall ohne zusätzlichen Schutz.
 - Back Plate und Gauntlets werden zwar vollständig aus der Einkaufstabelle angeboten, erhalten aber keine erfundenen AP: Das Kampfkapitel weist ihnen keinen eigenen AP-/Trefferzoneneintrag zu. Die Werte bleiben frei editierbar.
+
+
+## Advance-Korrektur & Ausrüstungseffekte
+
+- Gekaufte Charakteristik-Advances können im Karriere-Reiter schrittweise zurückgenommen werden.
+- Beim Zurücknehmen wird genau ein +10- bzw. +1-Schritt entfernt und der reguläre Advance-Preis von 100 EP wieder gutgeschrieben.
+- Waffen und Rüstungen können nun beliebig viele frei benannte Effekte/Fähigkeiten besitzen.
+- Jeder Effekt hat Typ, Beschreibung/Regelwirkung und einen Aktiv-Schalter.
+- Effekte werden unter Kampf → Magische Effekte aufgelistet, sobald die zugehörige Waffe/Rüstung aktiv angelegt bzw. griffbereit ist.
+- Der Bereich zeigt nun außerdem alle aktivierten Zauber, nicht nur Zauber mit Rüstungsbonus.
+- Beispielnamen wie Armour Piercing oder Warp Attack können frei eingetragen werden; die App erfindet dafür keine automatische Regelwirkung.

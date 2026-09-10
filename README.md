@@ -102,3 +102,10 @@ Die Gegenstands-Vorlagen enthalten jetzt zusätzlich die `Subsistence`-Tabelle v
 Die Preset-Listen wurden erneut gegen das Grundregelwerk geprüft. Die Consumer-Guide-Tabellen auf S. 295 sind vollständig abgebildet; Waffenwerte werden zusätzlich mit den Kampf-Tabellen auf S. 120 und S. 128 abgeglichen.
 
 Gambeson ist eine bewusst als Hausregel ergänzte Materialart. Ein eingetragener Schutzpunkt wird ohne Metall als 0/1 angezeigt. Deckt auf derselben Trefferzone zusätzlich Metallrüstung, wird der Gambeson dort als fester +1 AP gerechnet. Leder verhält sich weiterhin wie im Grundregelwerk und gibt unter Metall keinen Zusatzschutz.
+
+
+## Advance-Korrektur und Gegenstandseffekte
+
+Im Karriere-Reiter lässt sich ein versehentlich gekaufter Advance mit „zurück“ wieder entfernen. Ein Schritt entspricht weiterhin +10 bei Prozentwerten bzw. +1 bei M/S/T/W/A; die 100 EP werden zurückerstattet.
+
+Waffen und Rüstungen können im Gegenstands-Editor mehrere besondere Effekte erhalten. Name, Kategorie, Beschreibung und Aktivstatus sind frei editierbar. Ist der Gegenstand angelegt oder griffbereit, erscheinen aktivierte Effekte zusammen mit aktiven Zaubern unter Kampf → Magische Effekte.
