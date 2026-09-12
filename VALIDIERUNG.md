@@ -89,3 +89,12 @@ Geprüft:
 - iPadOS/iOS-Autofokus beim Öffnen der betroffenen Formulare wurde entfernt.
 - Cache-Busting in `index.html` und neuer Service-Worker-Cache wurden gesetzt.
 - Ein echter iPad-Gerätetest ist in dieser Build-Umgebung nicht möglich; die Korrektur basiert auf dem identifizierten Safari/PWA-Fokusproblem und wurde statisch/syntaktisch geprüft.
+
+
+## 2026-09-12 – Insanity / Profil-Effekte / Knight's Helm
+
+- [x] Backward-kompatible Sanitization für `sheet.mental`.
+- [x] Backward-kompatible Sanitization für `profileBonuses` auf Zaubern und Gegenstandseffekten.
+- [x] Aktive Profilboni wirken auf Start/Current und verschwinden beim Deaktivieren/Ablegen.
+- [x] Mail Coif + Knight's Helm als erlaubte Schichtung; Pot Helmet entfernt.
+- [x] Service-Worker-Cache und Asset-Query aktualisiert.

@@ -1,4 +1,4 @@
-const CACHE = "altdorf-geldbeutel-core-v14-ipad-items";
+const CACHE = "altdorf-geldbeutel-core-v15-insanity-magicmods-knighthelm";
 const FILES = [
   "./",
   "./index.html",

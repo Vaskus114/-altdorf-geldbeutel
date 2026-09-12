@@ -515,3 +515,10 @@
   .equipment-row-main{padding:10px 8px}
   .item-actions{flex-wrap:wrap;justify-content:flex-end}
 }
+
+
+/* Insanity / Disorders + temporary profile effects */
+.resource-disorders-card{min-width:0}
+.resource-disorders-card strong{white-space:pre-line;overflow-wrap:anywhere;word-break:break-word;font-size:clamp(.95rem,1.5vw,1.15rem);line-height:1.25}
+.item-effect-profile-bonus{margin-top:10px}
+.active-effect-card p b,.spell-card p b{letter-spacing:.01em}

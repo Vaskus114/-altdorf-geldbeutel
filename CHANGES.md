@@ -157,3 +157,13 @@
 - Gegenstände besitzen jetzt ein eigenes Feld `Beschreibung & Regeln` zusätzlich zur kurzen Notiz.
 - Die Beschreibung wird im Charakterbogen unter Kampf sowie in Truhen & Lager als ausklappbarer Bereich angezeigt.
 - Bestehende Gegenstände bleiben kompatibel; fehlt das neue Feld, wird es leer ergänzt.
+
+
+## Insanity, Disorders, temporäre Profilboni & Knight's Helm
+
+- Profil/Ressourcen um **Insanity Points** und ein mehrzeiliges Feld **Disorders** erweitert.
+- Zauber können jetzt Profilboni für alle 14 Charakteristika besitzen; sie gelten nur solange der Zauber aktiv ist.
+- Waffen-/Rüstungseffekte können ebenfalls optionale Profilboni besitzen; sie gelten nur bei aktivem Effekt und angelegtem/griffbereitem Gegenstand.
+- Temporäre Boni werden wie Skill-/Talentboni im Profil unter **Start** mit `*` angezeigt und in **Current** eingerechnet. Tooltips nennen die Quelle.
+- Kampf → Magische Effekte zeigt die konkrete Profilwirkung (z. B. `I +10`).
+- Rüstungsschichtung korrigiert: **Mail Coif + Knight's Helm** ist regelkonform erlaubt. **Mail Coif + Pot Helmet** gibt laut Consumer Guide keinen zusätzlichen Rüstungsbonus und wird nicht mehr als Standard-Schichtung freigegeben.

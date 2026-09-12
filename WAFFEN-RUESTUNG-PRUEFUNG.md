@@ -20,3 +20,8 @@ Gambeson ist eine zusätzliche Hausregel und kein eigener Tabellen-Eintrag des G
 
 - allein: 0/1 AP wie Leder,
 - unter Metall auf derselben Trefferzone: fester +1 AP zusätzlich zur Metallrüstung.
+
+
+## Korrektur Helm + Mail Coif
+
+Das Kampfkapitel erlaubt ausdrücklich einen Helm über einer Coif (2 AP am Kopf). Im Consumer Guide trägt ausschließlich der **Pot Helmet** die Fußnote, dass er über einer Mail Coif **keinen** Rüstungsbonus verleiht. Der **Knight's Helm** hat diese Ausnahme nicht. Daher ist Mail Coif + Knight's Helm in der App als zulässige Standard-Schichtung hinterlegt; Mail Coif + Pot Helmet nicht.

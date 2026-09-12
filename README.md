@@ -115,3 +115,10 @@ Waffen und Rüstungen können im Gegenstands-Editor mehrere besondere Effekte er
 Für iPadOS/iOS wurde das Fokusverhalten der Texteingaben in den Dialogen angepasst. Die App setzt auf dem iPad beim Öffnen eines Formulars keinen künstlichen Autofokus mehr, sondern fokussiert Text- und Zahlenfelder direkt aus der Touch-Geste. Dies ist speziell für Safari bzw. zum Homescreen hinzugefügte PWAs gedacht.
 
 Jeder Gegenstand kann außerdem einen längeren Text unter **Beschreibung & Regeln** speichern. In den Inventarlisten und im Kampfbereich erscheint dieser Text wie bei Skills als aufklappbarer Abschnitt. Die separate kurze Notiz bleibt erhalten.
+
+
+## Geisteszustand & temporäre Profiländerungen
+
+Im Profil können Insanity Points und Disorders gepflegt werden. Aktive Zauber sowie aktive Effekte von angelegten Waffen/Rüstungen können optionale Profilboni tragen; diese werden temporär in Start/Current verrechnet und mit `*` markiert.
+
+Die Helm-Schichtungsregel entspricht dem Grundregelwerk: Knight's Helm über Mail Coif ist zulässig; der Pot Helmet ist die ausdrücklich genannte Ausnahme ohne zusätzlichen AP-Bonus über Mail Coif.
