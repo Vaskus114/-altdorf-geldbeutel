@@ -211,3 +211,14 @@
 - Die Karriereanzeige zeigt nun `gekauft / Maximum / noch offen`, damit der verbleibende Spielraum sofort erkennbar ist.
 - Skill-, Talent- und aktive Magieboni verändern weiterhin den angezeigten Profilwert, zählen aber nicht als gekaufte Karriere-Advances.
 - Die gleiche zentrale Prüfung wird sowohl für die Anzeige als auch beim tatsächlichen Kauf verwendet, damit UI und Kaufregel nicht auseinanderlaufen können.
+
+## Gerätespezifische Anzeigegröße
+
+- Neuer Zahnrad-Button in der Kopfzeile öffnet **Anzeigegröße**.
+- Schieberegler von **75 % bis 140 %** in 5-%-Schritten, inklusive −5 %, Reset auf 100 % und +5 %.
+- Die Einstellung wird unter `altdorf-geldbeutel-ui-scale-v1` in `localStorage` gespeichert und gilt bewusst nur auf dem jeweiligen Gerät.
+- Verändert keine Charakter- oder IndexedDB-Daten und wird nicht in Backups exportiert.
+- Skalierung erfolgt mit CSS `zoom`, nicht mit `transform: scale()`, damit Touch-, Scroll- und Dialogkoordinaten stabil bleiben.
+- Die Profilansicht berücksichtigt die **effektive Layoutbreite nach Skalierung**; bei zu wenig Platz werden automatisch die kompakten Profilkarten verwendet.
+- Beim Drucken wird auf 100 % zurückgestellt.
+- Service-Worker-Cache auf `v20-ui-scale` erhöht.

@@ -12,7 +12,7 @@
   <link rel="icon" href="./wallet-icon.svg">
   <link rel="apple-touch-icon" href="./wallet-icon.svg">
   <title>Altdorfer Geldbeutel – WFRP 1E</title>
-  <link rel="stylesheet" href="./styles.css?v=20260913-advance-cap-v1">
+  <link rel="stylesheet" href="./styles.css?v=20260913-ui-scale-v1">
 </head>
 <body>
   <main id="app" class="loading">Das Kontobuch wird geöffnet …</main>
@@ -21,11 +21,14 @@
     <main class="app">
       <header class="topbar">
         <div><span class="eyebrow">Münzbuch der Alten Welt</span><h1>Geldbeutel</h1></div>
-        <button class="character-button" id="open-characters" aria-label="Charakter wechseln">
-          <span class="avatar" id="active-avatar"></span>
-          <span class="character-copy"><strong id="active-name"></strong><small id="active-career"></small></span>
-          <span aria-hidden="true">⌄</span>
-        </button>
+        <div class="topbar-actions">
+          <button class="display-settings-button" id="open-display-settings" type="button" aria-label="Anzeigegröße einstellen" title="Anzeigegröße">⚙</button>
+          <button class="character-button" id="open-characters" aria-label="Charakter wechseln">
+            <span class="avatar" id="active-avatar"></span>
+            <span class="character-copy"><strong id="active-name"></strong><small id="active-career"></small></span>
+            <span aria-hidden="true">⌄</span>
+          </button>
+        </div>
       </header>
       <section class="wallet" id="wallet-region">
         <div class="wallet-heading"><span>Was noch in der Börse liegt</span><span class="seal" aria-hidden="true">₰</span></div>
@@ -57,7 +60,7 @@
     </main>
   </template>
 
-  <script src="./wfrp1e-data.js?v=20260913-advance-cap-v1"></script>
-  <script src="./app.js?v=20260913-advance-cap-v1"></script>
+  <script src="./wfrp1e-data.js?v=20260913-ui-scale-v1"></script>
+  <script src="./app.js?v=20260913-ui-scale-v1"></script>
 </body>
 </html>

@@ -143,3 +143,7 @@ Das Münzbuch lädt bei sehr langen Verläufen jeweils 250 Zeilen nach. Auf iPad
 ## Advance-Schema über mehrere Karrieren
 
 Advance-Schemes sind in WFRP 1E nicht kumulativ. Bereits gekaufte Advances früherer Karrieren zählen gegen das Maximum der aktuellen Karriere. Die Karriereansicht zeigt deshalb nun gekauftes Maximum und verbleibende Advances getrennt an.
+
+## Anzeigegröße pro Gerät
+
+Über das Zahnrad in der Kopfzeile kann die gesamte Oberfläche zwischen 75 % und 140 % skaliert werden. Der Wert bleibt lokal auf dem jeweiligen Gerät erhalten und ist unabhängig von Charakterdaten und Backups. Browser-Zoom sollte für ein vorhersehbares Ergebnis möglichst auf 100 % stehen.

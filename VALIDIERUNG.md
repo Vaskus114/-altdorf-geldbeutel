@@ -127,3 +127,16 @@ Geprüfte Logik:
 - gekauft +20, Schema WS +20 -> kein weiterer Kauf
 
 Skill-, Talent- und Magieboni werden bei dieser Grenze absichtlich nicht mitgerechnet, da sie keine gekauften Career Advances sind.
+
+## Anzeigegröße / UI-Scale
+
+Geprüft:
+- `app.js`, `wfrp1e-data.js` und `sw.js` bestehen `node --check`.
+- Bereich ist auf 75–140 % begrenzt und wird auf 5-%-Schritte gerundet.
+- Speicherung verwendet ausschließlich `localStorage` (`altdorf-geldbeutel-ui-scale-v1`); das IndexedDB-Schema bleibt unverändert.
+- Profilansicht nutzt zusätzlich die effektive Breite `Viewport / Skalierungsfaktor`, damit die Desktop-Tabelle bei großer Anzeigegröße nicht in einen zu kleinen Layoutbereich gedrückt wird.
+- Für effektive Breiten 900/760/560/520 px werden zentrale Responsive-Regeln zusätzlich per Klasse erzwungen.
+- Druckansicht setzt den App-Zoom auf 100 % zurück.
+- Service-Worker-Cache wurde auf `altdorf-geldbeutel-core-v20-ui-scale` erhöht.
+
+Hinweis: Ein echter Geräte-Test auf Safari/iPadOS, Android Chrome und Windows Edge ist in dieser Umgebung nicht möglich. Die Skalierung verwendet bewusst CSS `zoom`, das auf den Zielbrowsern Layout und Hit-Testing gemeinsam skaliert; `transform: scale()` wird nicht verwendet.

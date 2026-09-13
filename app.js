@@ -4,6 +4,36 @@
   const RULES = window.WFRP1E || {locations:["head","rightArm","leftArm","body","rightLeg","leftLeg"],characteristics:[],advanceableCharacteristics:[],careers:{basic:[],advanced:[]},careerDetails:{},careerOptions:[],skills:[],skillDetails:{},armourPresets:[],weaponPresets:[],equipmentPresets:[],spellPresets:[],allowedLayerPairs:[],rules:{advanceCost:100,skillCost:100,spellArmourCostPerPoint:2,specialistUntrainedValue:10}};
   const KEY = "altdorf-geldbeutel-v9";
   const OLD_KEYS = ["altdorf-geldbeutel-v8","altdorf-geldbeutel-v7","altdorf-geldbeutel-v6","altdorf-geldbeutel-v5","altdorf-geldbeutel-v4","altdorf-geldbeutel-v3","altdorf-geldbeutel-v2","altdorf-geldbeutel-v1"];
+  const UI_SCALE_KEY = "altdorf-geldbeutel-ui-scale-v1";
+  const UI_SCALE_MIN = 75;
+  const UI_SCALE_MAX = 140;
+  const UI_SCALE_STEP = 5;
+  const clampUiScale = value => Math.max(UI_SCALE_MIN, Math.min(UI_SCALE_MAX, Math.round(Number(value) / UI_SCALE_STEP) * UI_SCALE_STEP || 100));
+  const readUiScale = () => {
+    try { return clampUiScale(localStorage.getItem(UI_SCALE_KEY) || 100); }
+    catch (_) { return 100; }
+  };
+  let uiScalePercent = readUiScale();
+  const applyUiScale = (value=uiScalePercent,{persistValue=false}={}) => {
+    uiScalePercent=clampUiScale(value);
+    const factor=uiScalePercent/100;
+    const root=document.documentElement;
+    root.style.setProperty("--ui-scale",String(factor));
+    root.dataset.uiScale=String(uiScalePercent);
+    // CSS media queries use the unscaled viewport. The profile table, however,
+    // needs the effective layout width after CSS zoom, otherwise a large UI scale
+    // can reintroduce horizontal overflow on Edge/Android tablets.
+    const effectiveWidth=(window.innerWidth||root.clientWidth||0)/factor;
+    root.style.setProperty("--ui-profile-columns",String(effectiveWidth>=1000?4:effectiveWidth>=700?3:2));
+    root.classList.toggle("ui-profile-compact-force",effectiveWidth<1400);
+    root.classList.toggle("ui-profile-wide-force",effectiveWidth>=1400);
+    [520,560,760,900,1050].forEach(limit=>root.classList.toggle(`ui-effective-${limit}`,effectiveWidth<=limit));
+    if(persistValue){
+      try { localStorage.setItem(UI_SCALE_KEY,String(uiScalePercent)); } catch (_) {}
+    }
+    return uiScalePercent;
+  };
+  applyUiScale(uiScalePercent);
   const DB_NAME = "altdorf-geldbeutel";
   const DB_VERSION = 2;
   const DB_STATE_STORE = "app-state";
@@ -672,6 +702,32 @@
     $("#ledger-more")?.addEventListener("click",()=>{ledgerLimits.set(character.id,ledgerLimit+LEDGER_PAGE_SIZE);render()});
   };
 
+  const displaySettings = () => {
+    const layer=modal(`<section class="sheet display-settings-sheet"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Geräteeinstellung</span><h2>Anzeigegröße</h2></div><button class="close" aria-label="Schließen">×</button></div>
+      <div class="display-scale-card">
+        <div class="display-scale-heading"><label for="ui-scale-range"><strong>Zoom der Anwendung</strong><small>Gilt nur auf diesem Gerät und bleibt gespeichert.</small></label><output id="ui-scale-value" for="ui-scale-range">${uiScalePercent}%</output></div>
+        <input id="ui-scale-range" class="display-scale-range" type="range" min="${UI_SCALE_MIN}" max="${UI_SCALE_MAX}" step="${UI_SCALE_STEP}" value="${uiScalePercent}" aria-label="Anzeigegröße in Prozent">
+        <div class="display-scale-ticks" aria-hidden="true"><span>${UI_SCALE_MIN}%</span><span>100%</span><span>${UI_SCALE_MAX}%</span></div>
+        <div class="display-scale-actions"><button type="button" class="secondary-button" data-scale-delta="-${UI_SCALE_STEP}">− ${UI_SCALE_STEP}%</button><button type="button" class="secondary-button" id="ui-scale-reset">100 % zurücksetzen</button><button type="button" class="secondary-button" data-scale-delta="${UI_SCALE_STEP}">+ ${UI_SCALE_STEP}%</button></div>
+        <p class="hint" id="ui-scale-layout-note"></p>
+        <p class="backup-note">Die Einstellung wird bewusst in localStorage gespeichert und nicht mit dem Charakter-Backup synchronisiert. So kann z. B. Windows 90 %, das iPad 100 % und Android 110 % verwenden. Für ein vorhersehbares Ergebnis sollte der Browser-Zoom möglichst auf 100 % stehen.</p>
+      </div>
+    </section>`);
+    const range=$("#ui-scale-range",layer),output=$("#ui-scale-value",layer),note=$("#ui-scale-layout-note",layer);
+    const refresh=()=>{
+      const value=applyUiScale(range.value,{persistValue:true});
+      range.value=String(value);
+      output.textContent=`${value}%`;
+      const effective=Math.round((window.innerWidth||document.documentElement.clientWidth||0)/(value/100));
+      note.textContent=`Effektive Layoutbreite: ca. ${effective}px · ${effective>=1400?"klassische Profiltabelle":"kompakte Profilkarten"}.`;
+    };
+    range.addEventListener("input",refresh);
+    $$('[data-scale-delta]',layer).forEach(button=>button.addEventListener("click",()=>{range.value=String(clampUiScale(uiScalePercent+num(button.dataset.scaleDelta,0)));refresh()}));
+    $("#ui-scale-reset",layer).addEventListener("click",()=>{range.value="100";refresh()});
+    $(".close",layer).addEventListener("click",()=>layer.remove());
+    refresh();
+  };
+
   const characterPicker = () => {
     const layer = modal(`<section class="sheet"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Geldbeutel</span><h2>Charaktere</h2></div><button class="close" aria-label="Schließen">×</button></div>
       <div class="character-list">${state.characters.map(character => `<article class="character-row ${character.id===active().id?"selected":""}"><button class="character-select" data-select="${character.id}"><span class="avatar">${escapeHtml(character.name.charAt(0).toUpperCase())}</span><span><strong>${escapeHtml(character.name)}</strong><small>${escapeHtml(character.career)} · ${label(character.balance)}</small></span></button>${state.characters.length>1?`<button class="delete" data-delete="${character.id}" aria-label="${escapeHtml(character.name)} löschen">×</button>`:""}</article>`).join("")}</div>
@@ -1168,12 +1224,14 @@
   };
 
   const undo = transactionId => {const character=active();const transaction=character.transactions.find(item=>item.id===transactionId);if(!transaction)return;const next=character.balance+(transaction.type==="income"?-transaction.amount:transaction.amount);if(next<0){alert("Diese Einnahme kann nicht rückgängig gemacht werden, solange das Geld bereits ausgegeben ist.");return}character.balance=next;character.transactions=character.transactions.filter(item=>item.id!==transactionId);persist();render()};
-  const bind=()=>{$("#open-characters").addEventListener("click",characterPicker);$("#open-character-sheet").addEventListener("click",()=>characterSheet("profile"));$("#open-storage").addEventListener("click",storageSheet);$$('[data-transaction]').forEach(button=>button.addEventListener("click",()=>transactionSheet(button.dataset.transaction)))};
+  const bind=()=>{$("#open-characters").addEventListener("click",characterPicker);$("#open-display-settings")?.addEventListener("click",displaySettings);$("#open-character-sheet").addEventListener("click",()=>characterSheet("profile"));$("#open-storage").addEventListener("click",storageSheet);$$('[data-transaction]').forEach(button=>button.addEventListener("click",()=>transactionSheet(button.dataset.transaction)))};
 
   const start = async () => {
     try{
       await initializeStorage();
       mount();
+      let scaleResizeFrame=0;
+      window.addEventListener("resize",()=>{if(scaleResizeFrame)return;scaleResizeFrame=requestAnimationFrame(()=>{scaleResizeFrame=0;applyUiScale(uiScalePercent)})},{passive:true});
       document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")persist().catch(error=>console.error("Speichern beim Verlassen fehlgeschlagen.",error))});
       window.addEventListener("pagehide",()=>{persist().catch(error=>console.error("Speichern beim Schließen fehlgeschlagen.",error))});
     }catch(error){

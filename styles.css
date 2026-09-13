@@ -662,3 +662,71 @@ button,
   margin-top:12px;
   min-height:44px;
 }
+
+/* Gerätespezifische Anzeigegröße / App-Zoom
+   CSS zoom skaliert Layout und Interaktion gemeinsam und vermeidet die
+   Scroll-/Touch-Probleme einer transform:scale()-Loesung. */
+:root{--ui-scale:1}
+html{zoom:var(--ui-scale)}
+.topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
+.display-settings-button{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;padding:0;color:var(--bone);background:linear-gradient(#2d2923,#191714);border:1px solid #6b5740;border-radius:2px;box-shadow:inset 0 0 0 2px #12110f,2px 3px 0 rgba(0,0,0,.45);font-family:Georgia,serif;font-size:21px;line-height:1;touch-action:manipulation}
+.display-settings-button:active{transform:translateY(1px)}
+.display-settings-sheet{width:min(calc(100vw - 28px),560px);width:min(calc(100dvw - 28px),560px)}
+.display-scale-card{margin-top:14px;padding:14px;border:1px solid rgba(69,53,36,.6);background:rgba(255,255,255,.13)}
+.display-scale-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.display-scale-heading label{margin:0;padding:0;color:var(--ink)}
+.display-scale-heading label strong{display:block;font-family:"Cinzel Decorative",Georgia,serif;font-size:14px}
+.display-scale-heading label small{display:block;margin-top:4px;color:var(--muted);font-size:11px;line-height:1.3}
+#ui-scale-value{min-width:68px;padding:6px 8px;border:1px solid rgba(69,53,36,.52);background:rgba(255,255,255,.24);font-family:"Cinzel Decorative",Georgia,serif;font-size:18px;text-align:center}
+.display-scale-range{width:100%;min-height:44px;margin:15px 0 0;accent-color:#6f1e20;touch-action:pan-x}
+.display-scale-ticks{display:flex;justify-content:space-between;margin-top:-4px;color:var(--muted);font-size:9px}
+.display-scale-actions{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;margin-top:12px}
+.display-scale-actions .secondary-button{min-height:42px;margin:0;white-space:normal}
+#ui-scale-layout-note{margin-top:12px}
+
+/* Die Media Queries sehen die unskalierte Viewportbreite. Diese Klassen werden
+   aus der effektiven Breite (Viewport / UI-Faktor) berechnet und verhindern,
+   dass bei 110–140 % die breite Profil-Tabelle wieder ueberlaeuft. */
+html.ui-profile-compact-force .profile-table-wrap{display:none!important}
+html.ui-profile-compact-force .profile-compact-grid{display:grid!important}
+html.ui-profile-wide-force .profile-table-wrap{display:block!important;overflow-x:auto}
+html.ui-profile-wide-force .profile-compact-grid{display:none!important}
+
+@media(max-width:560px){
+  .topbar-actions{gap:6px}
+  .display-settings-button{flex-basis:40px;width:40px;height:40px;font-size:19px}
+  .display-scale-actions{grid-template-columns:1fr 1.5fr 1fr}
+  .display-scale-actions .secondary-button{padding-inline:6px;font-size:10px}
+}
+@media print{html{zoom:1!important}}
+
+/* Zusätzliche Responsive-Härtung für App-Zoom: Browser-Media-Queries kennen nur
+   die rohe Viewportbreite. Diese Klassen spiegeln die effektive Layoutbreite. */
+html.ui-profile-compact-force .profile-compact-grid{grid-template-columns:repeat(var(--ui-profile-columns,4),minmax(0,1fr))!important}
+html.ui-effective-900 .sheet-content.tab-combat{grid-template-columns:1fr!important}
+html.ui-effective-900 .sheet-content.tab-combat .combat-equipment-box,
+html.ui-effective-900 .sheet-content.tab-combat .combat-effects-box{grid-column:auto!important}
+html.ui-effective-900 .sheet-header-band,
+html.ui-effective-900 .sheet-meta-strip,
+html.ui-effective-900 .career-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+html.ui-effective-760 .character-sheet{width:100%!important;max-width:100%!important}
+html.ui-effective-760 .sheet-tabs{overflow-x:auto!important;grid-template-columns:repeat(5,minmax(78px,1fr))!important;scrollbar-width:thin}
+html.ui-effective-760 .profile-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+html.ui-effective-560 .topbar{flex-wrap:wrap;align-items:flex-start}
+html.ui-effective-560 .topbar-actions{width:100%;justify-content:space-between}
+html.ui-effective-560 .character-button{flex:1;justify-content:flex-start}
+html.ui-effective-560 .character-copy{flex:1}
+html.ui-effective-560 .character-copy strong,
+html.ui-effective-560 .character-copy small{max-width:none}
+html.ui-effective-560 .sheet-header-band,
+html.ui-effective-560 .sheet-meta-strip,
+html.ui-effective-560 .resource-grid,
+html.ui-effective-560 .career-summary,
+html.ui-effective-560 .profile-facts{grid-template-columns:1fr!important}
+html.ui-effective-560 .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+html.ui-effective-560 .armour-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-areas:"head head" "leftArm rightArm" "body body" "leftLeg rightLeg"!important}
+html.ui-effective-520 .career-scheme-box .scheme-grid{grid-template-columns:1fr!important}
+html.ui-effective-520 .profile-compact-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+html.ui-effective-520 .display-scale-actions{grid-template-columns:1fr!important}
+html.ui-effective-520 .display-scale-heading{align-items:flex-start;flex-direction:column;gap:8px}
+.display-settings-sheet{width:min(100%,560px)}
