@@ -230,7 +230,7 @@
 
 /* Desktop-Fix für den Charakterbogen / Profilbereich */
 @media (min-width: 1100px){
-  .modal:has(.character-sheet){
+  .modal.character-sheet-modal{
     align-items:center;
     padding:18px;
   }
@@ -376,7 +376,6 @@
 .movement-encumbered{display:inline-flex!important;flex-direction:column;align-items:center!important;justify-content:center;gap:1px;line-height:1.05;color:#6a241e}
 .movement-encumbered>strong{font:inherit;font-weight:700;color:#6a241e}
 .movement-encumbered>small{display:block;margin-top:2px;color:#765346;font-family:"IM Fell English",Georgia,serif;font-size:7px!important;font-weight:400;line-height:1.1;white-space:normal}
-.profile-table .profile-current-row td:has(.movement-encumbered){background:rgba(120,64,47,.09)}
 .profile-stat-card .movement-encumbered{width:100%}
 .profile-stat-card .movement-encumbered>strong{font-size:17px}
 .profile-stat-card .movement-encumbered>small{font-size:7px!important}
@@ -522,3 +521,144 @@
 .resource-disorders-card strong{white-space:pre-line;overflow-wrap:anywhere;word-break:break-word;font-size:clamp(.95rem,1.5vw,1.15rem);line-height:1.25}
 .item-effect-profile-bonus{margin-top:10px}
 .active-effect-card p b,.spell-card p b{letter-spacing:.01em}
+
+/* Android / Windows Edge Kompatibilitaet (2026-09-13)
+   - keine Abhaengigkeit von :has() fuer das Character-Sheet-Layout
+   - stabile CSS-Viewport-Breiten bei Windows-Anzeigeskalierung
+   - groessere Touch-Ziele und erklaerbare Advance-Knoepfe
+   - vh-Fallback fuer Browser/WebViews ohne vollstaendiges dvh-Verhalten */
+html{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  min-width:0;
+}
+body{
+  min-width:0;
+  max-width:100%;
+  overflow-x:hidden;
+}
+.modal{
+  min-width:0;
+  max-width:100vw;
+  max-width:100dvw;
+}
+.sheet{
+  max-width:100%;
+  max-height:90vh;
+  max-height:90dvh;
+}
+.character-sheet{
+  min-width:0;
+  max-width:100%;
+}
+.character-sheet-frame,
+.sheet-content,
+.sheet-box,
+.sheet-box-body,
+.scheme-grid,
+.scheme-card{
+  min-width:0;
+  max-width:100%;
+}
+button,
+.mini-button,
+.secondary-button,
+.full-button{
+  -webkit-tap-highlight-color:rgba(88,55,32,.16);
+}
+.scheme-actions{
+  position:relative;
+  z-index:2;
+}
+.scheme-actions .mini-button{
+  position:relative;
+  z-index:2;
+  min-height:42px;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.2;
+}
+.scheme-actions .advance-buy.is-blocked{
+  opacity:.62;
+  border-style:dashed;
+}
+.advance-action-state{
+  display:block;
+  min-height:0!important;
+  color:#6f2a24!important;
+  font-size:8px!important;
+  line-height:1.2;
+  text-transform:none!important;
+  letter-spacing:0!important;
+}
+
+/* Statt :has(): app.js vergibt die Klasse beim Oeffnen des Charakterbogens. */
+@media (min-width:1100px){
+  .modal.character-sheet-modal{
+    align-items:center;
+    padding:18px;
+  }
+  .modal.character-sheet-modal .character-sheet{
+    width:min(calc(100vw - 36px),1500px);
+    width:min(calc(100dvw - 36px),1500px);
+    max-height:calc(100vh - 36px);
+    max-height:calc(100dvh - 36px);
+    margin:auto;
+  }
+}
+
+/* Windows Edge + Windows 125/150%-Skalierung:
+   Unterhalb von 1400 CSS-Pixeln bleiben die robusten Profilkarten aktiv.
+   Damit kann die 1260px-Tabelle nicht mehr in einen kleineren Innenraum ragen. */
+@media (min-width:761px) and (max-width:1399px){
+  .character-sheet{
+    width:min(calc(100vw - 28px),1180px);
+    width:min(calc(100dvw - 28px),1180px);
+  }
+  .profile-table-wrap{display:none!important}
+  .profile-compact-grid{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+  }
+  .profile-edit-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media (min-width:1400px){
+  .profile-table-wrap{
+    display:block!important;
+    overflow-x:auto;
+  }
+  .profile-table{
+    width:100%;
+    min-width:1260px;
+  }
+  .profile-compact-grid{display:none!important}
+}
+
+/* Android: lieber breite, sichere Kaufkarten als zwei sehr schmale Spalten. */
+@media (max-width:520px){
+  .career-scheme-box .scheme-grid{
+    grid-template-columns:1fr!important;
+  }
+  .career-scheme-box .scheme-card{
+    min-height:0;
+    padding:10px;
+  }
+  .scheme-actions .mini-button{
+    min-height:46px;
+    font-size:11px;
+  }
+  .sheet-tabs button,
+  .mini-button,
+  .secondary-button{
+    touch-action:manipulation;
+  }
+}
+
+/* Performance / Langzeitbetrieb: das Münzbuch rendert in Seiten statt tausende
+   Einträge gleichzeitig. Der Button bleibt auf Touch und Desktop gut erreichbar. */
+.ledger-more{
+  width:100%;
+  margin-top:12px;
+  min-height:44px;
+}

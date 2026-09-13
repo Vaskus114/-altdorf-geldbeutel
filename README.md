@@ -90,7 +90,7 @@ Die App berechnet die am Körper getragene ENC-Last einschließlich als „getra
 
 ## Charakterportrait
 
-Im Profil des Charakterbogens kann ein Bild hochgeladen werden. Das Portrait lässt sich direkt aus dem Profil groß aufrufen, ersetzen oder entfernen. Vor dem lokalen Speichern wird es auf maximal 900 px verkleinert und komprimiert, um den Browser-Speicher zu schonen. Da es im Charakterbogen-Datensatz liegt, ist es in der normalen Charakter-Sicherungsdatei enthalten.
+Im Profil des Charakterbogens kann ein Bild hochgeladen werden. Das Portrait lässt sich direkt aus dem Profil groß aufrufen, ersetzen oder entfernen. Vor dem lokalen Speichern wird es auf maximal 900 px verkleinert und komprimiert. In der IndexedDB-Version wird das Portrait intern getrennt als Bild-Blob gespeichert; beim Export wird es weiterhin in die normale Charakter-Sicherungsdatei eingebettet.
 
 
 ## Gegenstandslisten aus dem Consumer Guide
@@ -122,3 +122,20 @@ Jeder Gegenstand kann außerdem einen längeren Text unter **Beschreibung & Rege
 Im Profil können Insanity Points und Disorders gepflegt werden. Aktive Zauber sowie aktive Effekte von angelegten Waffen/Rüstungen können optionale Profilboni tragen; diese werden temporär in Start/Current verrechnet und mit `*` markiert.
 
 Die Helm-Schichtungsregel entspricht dem Grundregelwerk: Knight's Helm über Mail Coif ist zulässig; der Pot Helmet ist die ausdrücklich genannte Ausnahme ohne zusätzlichen AP-Bonus über Mail Coif.
+
+
+## Speicherung mit IndexedDB
+
+Die App verwendet jetzt IndexedDB als primären lokalen Datenspeicher. Beim ersten Start nach dem Update werden vorhandene Charaktere aus der bisherigen localStorage-Version automatisch übernommen. Die alte localStorage-Kopie wird dabei nicht gelöscht.
+
+Charakterdaten und Portraits werden getrennt gespeichert: `app-state` enthält nur kleine Metadaten wie den aktiven Charakter, jeder Charakter liegt als eigener Datensatz im Store `characters`, und Portraits liegen als Bild-Blobs im Store `portraits`. Das vermeidet das enge localStorage-Limit, reduziert den Base64-Overhead der Bilder und verhindert, dass bei jeder kleinen Änderung alle Charaktere komplett neu geschrieben werden müssen.
+
+Die sichtbare Bedienung und das Charakter-Backup bleiben kompatibel. Exportierte Charaktere verwenden weiterhin das bisherige JSON-Format Version 8 und können auf Android, iPad/iPhone, macOS und Windows wieder importiert werden. Alte Backup-Dateien Version 1 bis 8 werden weiterhin akzeptiert.
+
+Im Charakter-Auswahlfenster zeigt die App den aktiven Speichertyp an. Unterstützt der Browser die Storage-Estimate-API, werden zusätzlich die aktuell belegte Datenmenge und die vom Browser ungefähr bereitgestellte Quote angezeigt.
+
+## Kompatibilitäts- und Performance-Stand 13.09.2026
+
+Die lokale Datenbank verwendet intern IndexedDB Schema v2. Charaktere liegen als einzelne Datensätze vor, Portraits separat als Blobs. Dadurch bleibt die App auch bei vielen Charakteren reaktionsfähiger. Bestehende IndexedDB-v1- und ältere localStorage-Daten werden automatisch übernommen; das externe Backupformat bleibt unverändert.
+
+Das Münzbuch lädt bei sehr langen Verläufen jeweils 250 Zeilen nach. Auf iPad/iPhone greift weiterhin der Safari-Fokus-Fix, während Android wieder ausschließlich sein natives Eingabefokus-Verhalten verwendet. Der Service Worker wurde für Offline-Betrieb und Cache-Updates überarbeitet.

@@ -4,6 +4,15 @@
   const RULES = window.WFRP1E || {locations:["head","rightArm","leftArm","body","rightLeg","leftLeg"],characteristics:[],advanceableCharacteristics:[],careers:{basic:[],advanced:[]},careerDetails:{},careerOptions:[],skills:[],skillDetails:{},armourPresets:[],weaponPresets:[],equipmentPresets:[],spellPresets:[],allowedLayerPairs:[],rules:{advanceCost:100,skillCost:100,spellArmourCostPerPoint:2,specialistUntrainedValue:10}};
   const KEY = "altdorf-geldbeutel-v9";
   const OLD_KEYS = ["altdorf-geldbeutel-v8","altdorf-geldbeutel-v7","altdorf-geldbeutel-v6","altdorf-geldbeutel-v5","altdorf-geldbeutel-v4","altdorf-geldbeutel-v3","altdorf-geldbeutel-v2","altdorf-geldbeutel-v1"];
+  const DB_NAME = "altdorf-geldbeutel";
+  const DB_VERSION = 2;
+  const DB_STATE_STORE = "app-state";
+  const DB_CHARACTER_STORE = "characters";
+  const DB_PORTRAIT_STORE = "portraits";
+  const DB_META_KEY = "meta";
+  const DB_LEGACY_STATE_KEY = "state";
+  const MIGRATION_MARKER = "altdorf-geldbeutel-indexeddb-migrated-v1";
+  const MAX_PORTRAIT_DATA_URL = 8 * 1024 * 1024;
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const id = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -36,6 +45,8 @@
     return `<div class="money-inputs"><label><span>Goldkronen</span><input name="gold" type="number" min="0" inputmode="numeric" value="${coins.gold||""}" placeholder="0"><small>GK</small></label><label><span>Schilling</span><input name="silver" type="number" min="0" inputmode="numeric" value="${coins.silver||""}" placeholder="0"><small>S</small></label><label><span>Pfennige</span><input name="brass" type="number" min="0" inputmode="numeric" value="${coins.brass||""}" placeholder="0"><small>P</small></label></div>`;
   };
   const amountFromForm = form => ["gold","silver","brass"].reduce((sum,name,index)=>sum+(Number(form.elements[name]?.value)||0)*[240,12,1][index],0);
+  const transactionDateFormatter = new Intl.DateTimeFormat("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+  const LEDGER_PAGE_SIZE = 250;
 
   const emptyArmour = () => Object.fromEntries(RULES.locations.map(location=>[location,0]));
   const sanitizeArmour = armour => Object.fromEntries(RULES.locations.map(location=>[location,Math.max(0,Math.min(20,num(armour?.[location],0))) ]));
@@ -195,7 +206,7 @@
     base.profileMeta={schemeSyncedPreset:String(sheet?.profileMeta?.schemeSyncedPreset||"").slice(0,160)};
     const portraitData=String(sheet?.portrait?.dataUrl||"");
     base.portrait={
-      dataUrl:/^data:image\/(?:png|jpe?g|webp);base64,/i.test(portraitData)&&portraitData.length<=1500000?portraitData:"",
+      dataUrl:/^data:image\/(?:png|jpe?g|webp);base64,/i.test(portraitData)&&portraitData.length<=MAX_PORTRAIT_DATA_URL?portraitData:"",
       name:String(sheet?.portrait?.name||"").slice(0,180)
     };
     base.magic={armourPointOverride:sheet?.magic?.armourPointOverride===""||sheet?.magic?.armourPointOverride==null?"":Math.max(0,num(sheet.magic.armourPointOverride,0))};
@@ -206,6 +217,7 @@
   };
 
   const ensureCharacter = character => {
+    if(!character.id) character.id=id();
     if (!Array.isArray(character.transactions)) character.transactions=[];
     if (!Array.isArray(character.inventory)) character.inventory=[];
     character.inventory=character.inventory.map(sanitizeItem);
@@ -229,15 +241,223 @@
   };
 
   let state;
-  try {
-    const raw = localStorage.getItem(KEY) || OLD_KEYS.map(key=>localStorage.getItem(key)).find(Boolean);
-    state = raw ? JSON.parse(raw) : freshState();
-    if (!state.characters?.length) state = freshState();
-    state.characters=state.characters.map(ensureCharacter);
-    if (!state.characters.some(character=>character.id===state.activeId)) state.activeId=state.characters[0].id;
-  } catch { state = freshState(); }
+  let db = null;
+  let storageMode = "indexeddb";
+  let persistChain = Promise.resolve();
+  const pendingPortraitChanges = new Map();
+  const pendingDeletedCharacters = new Set();
+  const ledgerLimits = new Map();
+  let storageErrorNotified = false;
 
-  const persist = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const requestResult = request => new Promise((resolve,reject)=>{
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error||new Error("IndexedDB-Anfrage fehlgeschlagen."));
+  });
+  const transactionDone = transaction => new Promise((resolve,reject)=>{
+    transaction.oncomplete=()=>resolve();
+    transaction.onerror=()=>reject(transaction.error||new Error("IndexedDB-Transaktion fehlgeschlagen."));
+    transaction.onabort=()=>reject(transaction.error||new Error("IndexedDB-Transaktion wurde abgebrochen."));
+  });
+  const getAllFromStore = store => new Promise((resolve,reject)=>{
+    if(typeof store.getAll==="function"){
+      const request=store.getAll();
+      request.onsuccess=()=>resolve(request.result||[]);
+      request.onerror=()=>reject(request.error||new Error("IndexedDB-Daten konnten nicht gelesen werden."));
+      return;
+    }
+    const rows=[];
+    const request=store.openCursor();
+    request.onsuccess=()=>{const cursor=request.result;if(!cursor){resolve(rows);return}rows.push(cursor.value);cursor.continue()};
+    request.onerror=()=>reject(request.error||new Error("IndexedDB-Daten konnten nicht gelesen werden."));
+  });
+  const openDatabase = () => new Promise((resolve,reject)=>{
+    if(!("indexedDB" in window)){const error=new Error("IndexedDB wird von diesem Browser nicht unterstützt.");error.code="IDB_UNSUPPORTED";reject(error);return}
+    const request=indexedDB.open(DB_NAME,DB_VERSION);
+    request.onupgradeneeded=event=>{
+      const database=request.result;
+      const transaction=request.transaction;
+      if(!database.objectStoreNames.contains(DB_STATE_STORE)) database.createObjectStore(DB_STATE_STORE);
+      if(!database.objectStoreNames.contains(DB_CHARACTER_STORE)) database.createObjectStore(DB_CHARACTER_STORE,{keyPath:"id"});
+      if(!database.objectStoreNames.contains(DB_PORTRAIT_STORE)) database.createObjectStore(DB_PORTRAIT_STORE,{keyPath:"characterId"});
+      if(event.oldVersion<2 && transaction && database.objectStoreNames.contains(DB_STATE_STORE)){
+        const stateStore=transaction.objectStore(DB_STATE_STORE);
+        const characterStore=transaction.objectStore(DB_CHARACTER_STORE);
+        const legacyRequest=stateStore.get(DB_LEGACY_STATE_KEY);
+        legacyRequest.onsuccess=()=>{
+          const legacyState=legacyRequest.result;
+          if(!legacyState||!Array.isArray(legacyState.characters)||!legacyState.characters.length)return;
+          legacyState.characters.forEach(character=>{if(character?.id)characterStore.put(character)});
+          stateStore.put({schemaVersion:2,activeId:legacyState.activeId||legacyState.characters[0]?.id||"",updatedAt:new Date().toISOString()},DB_META_KEY);
+          stateStore.delete(DB_LEGACY_STATE_KEY);
+        };
+      }
+    };
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error||new Error("IndexedDB konnte nicht geöffnet werden."));
+    request.onblocked=()=>{
+      const error=new Error("Die lokale Datenbank kann gerade nicht aktualisiert werden. Bitte andere geöffnete Tabs/Fenster des Altdorfer Geldbeutels schließen und die App neu laden.");
+      error.code="IDB_BLOCKED";
+      reject(error);
+    };
+  });
+  const dataUrlToBlob = dataUrl => {
+    const match=/^data:([^;,]+);base64,(.+)$/i.exec(String(dataUrl||""));
+    if(!match) return null;
+    const bytes=atob(match[2]);
+    const out=new Uint8Array(bytes.length);
+    for(let index=0;index<bytes.length;index+=1) out[index]=bytes.charCodeAt(index);
+    return new Blob([out],{type:match[1]||"image/jpeg"});
+  };
+  const blobToDataUrl = blob => new Promise((resolve,reject)=>{
+    if(!(blob instanceof Blob)){resolve("");return}
+    const reader=new FileReader();
+    reader.onerror=()=>reject(reader.error||new Error("Portrait konnte nicht aus IndexedDB gelesen werden."));
+    reader.onload=()=>resolve(String(reader.result||""));
+    reader.readAsDataURL(blob);
+  });
+  const sanitizeLoadedState = rawState => {
+    let next=rawState&&typeof rawState==="object"?rawState:freshState();
+    if(!Array.isArray(next.characters)||!next.characters.length) next=freshState();
+    next.characters=next.characters.map(ensureCharacter);
+    if(!next.characters.some(character=>character.id===next.activeId)) next.activeId=next.characters[0].id;
+    return next;
+  };
+  const readLegacyLocalState = () => {
+    try{
+      const raw=localStorage.getItem(KEY)||OLD_KEYS.map(key=>localStorage.getItem(key)).find(Boolean);
+      return raw?JSON.parse(raw):null;
+    }catch(error){
+      console.warn("Alte localStorage-Daten konnten nicht gelesen werden.",error);
+      return null;
+    }
+  };
+  const characterForDatabase = character => {
+    const sheet={...(character?.sheet||{}),portrait:{...(character?.sheet?.portrait||{}),dataUrl:""}};
+    return clone({...character,sheet});
+  };
+  const markPortraitForSave = character => {
+    const dataUrl=String(character?.sheet?.portrait?.dataUrl||"");
+    if(!character?.id||!dataUrl)return;
+    pendingPortraitChanges.set(character.id,{
+      type:"put",
+      dataUrl,
+      name:String(character.sheet.portrait?.name||"").slice(0,180),
+      updatedAt:new Date().toISOString()
+    });
+  };
+  const markPortraitForDelete = characterId => {
+    if(characterId) pendingPortraitChanges.set(characterId,{type:"delete"});
+  };
+  const loadPortraitForCharacter = async character => {
+    if(storageMode!=="indexeddb"||!db||!character||character.sheet?.portrait?.dataUrl)return;
+    const pending=pendingPortraitChanges.get(character.id);
+    if(pending?.type==="put"&&pending.dataUrl){character.sheet.portrait.dataUrl=pending.dataUrl;if(!character.sheet.portrait.name)character.sheet.portrait.name=pending.name||"";return}
+    if(pending?.type==="delete")return;
+    try{
+      const transaction=db.transaction(DB_PORTRAIT_STORE,"readonly");
+      const done=transactionDone(transaction);
+      const record=await requestResult(transaction.objectStore(DB_PORTRAIT_STORE).get(character.id));
+      await done;
+      if(record?.blob){
+        const dataUrl=await blobToDataUrl(record.blob);
+        if(dataUrl){
+          character.sheet.portrait.dataUrl=dataUrl;
+          if(!character.sheet.portrait.name&&record.name) character.sheet.portrait.name=String(record.name).slice(0,180);
+        }
+      }
+    }catch(error){console.warn(`Portrait von ${character.name} konnte nicht geladen werden.`,error)}
+  };
+  const unloadInactivePortraits = () => {
+    if(storageMode!=="indexeddb"||!state?.characters)return;
+    state.characters.forEach(character=>{
+      if(character.id!==state.activeId&&character.sheet?.portrait?.dataUrl) character.sheet.portrait.dataUrl="";
+    });
+  };
+  const writeInitialIndexedState = async sourceState => {
+    if(!db) throw new Error("IndexedDB ist nicht geöffnet.");
+    const transaction=db.transaction([DB_STATE_STORE,DB_CHARACTER_STORE,DB_PORTRAIT_STORE],"readwrite");
+    const stateStore=transaction.objectStore(DB_STATE_STORE);
+    const characterStore=transaction.objectStore(DB_CHARACTER_STORE);
+    const portraitStore=transaction.objectStore(DB_PORTRAIT_STORE);
+    stateStore.put({schemaVersion:2,activeId:sourceState.activeId,updatedAt:new Date().toISOString()},DB_META_KEY);
+    sourceState.characters.forEach(character=>{
+      characterStore.put(characterForDatabase(character));
+      const dataUrl=String(character.sheet?.portrait?.dataUrl||"");
+      const blob=dataUrlToBlob(dataUrl);
+      if(blob) portraitStore.put({characterId:character.id,blob,name:String(character.sheet?.portrait?.name||"").slice(0,180),updatedAt:new Date().toISOString()});
+    });
+    await transactionDone(transaction);
+  };
+  const writeIndexedChanges = async ({characterSnapshot,activeId,portraitEntries,deletedCharacterIds}) => {
+    if(!db) throw new Error("IndexedDB ist nicht geöffnet.");
+    const transaction=db.transaction([DB_STATE_STORE,DB_CHARACTER_STORE,DB_PORTRAIT_STORE],"readwrite");
+    const stateStore=transaction.objectStore(DB_STATE_STORE);
+    const characterStore=transaction.objectStore(DB_CHARACTER_STORE);
+    const portraitStore=transaction.objectStore(DB_PORTRAIT_STORE);
+    stateStore.put({schemaVersion:2,activeId,updatedAt:new Date().toISOString()},DB_META_KEY);
+    if(characterSnapshot?.id) characterStore.put(characterSnapshot);
+    deletedCharacterIds.forEach(characterId=>{characterStore.delete(characterId);portraitStore.delete(characterId)});
+    portraitEntries.forEach(([characterId,entry])=>{
+      if(entry.type==="delete"){portraitStore.delete(characterId);return}
+      const blob=dataUrlToBlob(entry.dataUrl);
+      if(blob) portraitStore.put({characterId,blob,name:entry.name,updatedAt:entry.updatedAt});
+    });
+    await transactionDone(transaction);
+  };
+  const persist = (reportErrors=false) => {
+    let operation;
+    if(storageMode==="localstorage"){
+      try{localStorage.setItem(KEY,JSON.stringify(state));operation=Promise.resolve()}catch(error){operation=Promise.reject(error)}
+    }else{
+      const current=active();
+      const characterSnapshot=current?characterForDatabase(current):null;
+      const activeId=state.activeId;
+      const portraitEntries=[...pendingPortraitChanges.entries()];
+      const deletedCharacterIds=[...pendingDeletedCharacters];
+      persistChain=persistChain.catch(()=>{}).then(()=>writeIndexedChanges({characterSnapshot,activeId,portraitEntries,deletedCharacterIds})).then(()=>{
+        portraitEntries.forEach(([characterId,entry])=>{if(pendingPortraitChanges.get(characterId)===entry)pendingPortraitChanges.delete(characterId)});
+        deletedCharacterIds.forEach(characterId=>pendingDeletedCharacters.delete(characterId));
+      });
+      operation=persistChain;
+    }
+    operation.then(()=>{storageErrorNotified=false}).catch(()=>{});
+    if(!reportErrors) operation.catch(error=>{
+      console.error("Lokales Speichern fehlgeschlagen.",error);
+      if(!storageErrorNotified&&document.visibilityState!=="hidden"){
+        storageErrorNotified=true;
+        setTimeout(()=>alert("Lokales Speichern fehlgeschlagen. Bitte freien Gerätespeicher prüfen und vorsichtshalber ein Charakter-Backup erstellen."),0);
+      }
+    });
+    return operation;
+  };
+  const initializeStorage = async () => {
+    if(!("indexedDB" in window)){
+      storageMode="localstorage";
+      state=sanitizeLoadedState(readLegacyLocalState()||freshState());
+      return;
+    }
+    db=await openDatabase();
+    db.onversionchange=()=>{db.close();db=null};
+    const transaction=db.transaction([DB_STATE_STORE,DB_CHARACTER_STORE],"readonly");
+    const done=transactionDone(transaction);
+    const metaPromise=requestResult(transaction.objectStore(DB_STATE_STORE).get(DB_META_KEY));
+    const charactersPromise=getAllFromStore(transaction.objectStore(DB_CHARACTER_STORE));
+    const [meta,characters]=await Promise.all([metaPromise,charactersPromise]);
+    await done;
+    if(characters.length){
+      state=sanitizeLoadedState({characters,activeId:meta?.activeId});
+      await loadPortraitForCharacter(active());
+      unloadInactivePortraits();
+      return;
+    }
+    const legacy=readLegacyLocalState();
+    state=sanitizeLoadedState(legacy||freshState());
+    await writeInitialIndexedState(state);
+    if(legacy){
+      try{localStorage.setItem(MIGRATION_MARKER,new Date().toISOString())}catch{}
+    }
+    unloadInactivePortraits();
+  };
   const active = () => state.characters.find(character => character.id === state.activeId) || state.characters[0];
   const skillProfileModifier = (character,key) => {
     const details=[];
@@ -370,7 +590,7 @@
 
   const isIOSLike = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const enableTouchFormFocus = root => {
-    if(!root) return;
+    if(!root||!isIOSLike()) return;
     const selector='input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea';
     const refocusFromEvent=event=>{
       const control=event.target?.closest?.(selector);
@@ -400,6 +620,7 @@
     const layer = document.createElement("div");
     layer.className = "modal"; layer.setAttribute("role","dialog"); layer.setAttribute("aria-modal","true");
     layer.innerHTML = `<button class="backdrop" aria-label="Schließen"></button>${content}`;
+    if(layer.querySelector(".character-sheet")) layer.classList.add("character-sheet-modal");
     document.body.append(layer);
     enableTouchFormFocus(layer);
     $(".backdrop",layer).addEventListener("click",()=>layer.remove()); return layer;
@@ -412,7 +633,7 @@
     bind(); render();
   };
   const render = () => {
-    const character = ensureCharacter(active());
+    const character = active();
     syncAdvancedFromCareerScheme(character,currentCareerRecord(character),false);
     const coins = splitCoins(character.balance);
     $("#active-avatar").textContent = character.name.charAt(0).toUpperCase();
@@ -424,34 +645,43 @@
     $("#balance-brass").textContent = coins.brass;
     $("#transaction-count").textContent = character.transactions.length;
     const storageCount=character.storages.length;
-    $("#storage-summary-line").textContent=`${storageCount?`${storageCount} Lager`:"Keine Lager"} · ${bodyEnc(character)} ENC am Körper`;
+    const carriedEnc=bodyEnc(character);
+    $("#storage-summary-line").textContent=`${storageCount?`${storageCount} Lager`:"Keine Lager"} · ${carriedEnc} ENC am Körper`;
     const cap=carryingCapacity(character);
     const movement=movementState(character);
     const ap=armourBreakdown(character);
-    $("#character-summary-line").textContent=`${character.career} · W ${character.sheet.resources.currentWounds}/${woundsMax(character)} · M ${movement.current}${movement.penalty?` (Original ${movement.base})`:""} · AP Körper ${armourDisplay(ap.body)}${cap?` · ${bodyEnc(character)}/${cap} ENC`:""}`;
-    $("#transaction-list").innerHTML = character.transactions.length ? `<div class="transactions">${character.transactions.map(transaction => `
+    $("#character-summary-line").textContent=`${character.career} · W ${character.sheet.resources.currentWounds}/${woundsMax(character)} · M ${movement.current}${movement.penalty?` (Original ${movement.base})`:""} · AP Körper ${armourDisplay(ap.body)}${cap?` · ${carriedEnc}/${cap} ENC`:""}`;
+    const ledgerLimit=ledgerLimits.get(character.id)||LEDGER_PAGE_SIZE;
+    const visibleTransactions=character.transactions.slice(0,ledgerLimit);
+    const hiddenTransactions=Math.max(0,character.transactions.length-visibleTransactions.length);
+    $("#transaction-list").innerHTML = character.transactions.length ? `<div class="transactions">${visibleTransactions.map(transaction => `
       <article class="transaction">
         <span class="transaction-icon ${transaction.type}">${transaction.type === "income" ? "＋" : "−"}</span>
-        <div class="transaction-copy"><strong>${escapeHtml(transaction.note)}</strong><small>${new Intl.DateTimeFormat("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(transaction.createdAt))}</small></div>
+        <div class="transaction-copy"><strong>${escapeHtml(transaction.note)}</strong><small>${transactionDateFormatter.format(new Date(transaction.createdAt))}</small></div>
         <div class="transaction-amount ${transaction.type}"><strong>${transaction.type === "income" ? "+" : "−"} ${label(transaction.amount)}</strong><button class="undo" data-undo="${transaction.id}">rückgängig</button></div>
-      </article>`).join("")}</div>` : `<div class="empty"><img class="empty-coin" src="./coin-brass.png" alt=""><h3>Das Buch ist noch leer</h3><p>Noch wurde kein Pfennig verdient – oder verloren.</p></div>`;
+      </article>`).join("")}</div>${hiddenTransactions?`<button type="button" class="secondary-button ledger-more" id="ledger-more">Weitere ${Math.min(LEDGER_PAGE_SIZE,hiddenTransactions)} Buchungen anzeigen · ${hiddenTransactions} verborgen</button>`:""}` : `<div class="empty"><img class="empty-coin" src="./coin-brass.png" alt=""><h3>Das Buch ist noch leer</h3><p>Noch wurde kein Pfennig verdient – oder verloren.</p></div>`;
     $$('[data-undo]').forEach(button => button.addEventListener("click", () => undo(button.dataset.undo)));
-    persist();
+    $("#ledger-more")?.addEventListener("click",()=>{ledgerLimits.set(character.id,ledgerLimit+LEDGER_PAGE_SIZE);render()});
   };
 
   const characterPicker = () => {
     const layer = modal(`<section class="sheet"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Geldbeutel</span><h2>Charaktere</h2></div><button class="close" aria-label="Schließen">×</button></div>
       <div class="character-list">${state.characters.map(character => `<article class="character-row ${character.id===active().id?"selected":""}"><button class="character-select" data-select="${character.id}"><span class="avatar">${escapeHtml(character.name.charAt(0).toUpperCase())}</span><span><strong>${escapeHtml(character.name)}</strong><small>${escapeHtml(character.career)} · ${label(character.balance)}</small></span></button>${state.characters.length>1?`<button class="delete" data-delete="${character.id}" aria-label="${escapeHtml(character.name)} löschen">×</button>`:""}</article>`).join("")}</div>
       <div class="backup-actions"><button type="button" class="secondary-button" id="backup-character">↓ ${escapeHtml(active().name)} sichern</button><button type="button" class="secondary-button" id="restore-character">↑ Sicherung einlesen</button><input class="hidden" id="backup-file" type="file" accept=".json,application/json"></div>
-      <p class="backup-note">Die Sicherung enthält Charakterbogen, Geldbeutel, Münzbuch, Inventar und alle Truhen/Lager dieses Charakters.</p><button class="full-button" id="new-character">＋ Neuen Charakter anlegen</button></section>`);
+      <p class="backup-note">Die Sicherung enthält Charakterbogen, Geldbeutel, Münzbuch, Inventar und alle Truhen/Lager dieses Charakters.</p>
+      <p class="backup-note" id="storage-status">Lokaler Speicher: ${storageMode==="indexeddb"?"IndexedDB v2 aktiv":"localStorage-Fallback"}</p><button class="full-button" id="new-character">＋ Neuen Charakter anlegen</button></section>`);
     $(".close",layer).addEventListener("click",()=>layer.remove());
-    $$('[data-select]',layer).forEach(button => button.addEventListener("click",()=>{state.activeId=button.dataset.select;layer.remove();render()}));
-    $$('[data-delete]',layer).forEach(button => button.addEventListener("click",()=>{const character=state.characters.find(item=>item.id===button.dataset.delete);if(character&&confirm(`${character.name} und alle zugehörigen Daten wirklich löschen?`)){state.characters=state.characters.filter(item=>item.id!==character.id);if(state.activeId===character.id)state.activeId=state.characters[0].id;layer.remove();render();characterPicker()}}));
+    $$('[data-select]',layer).forEach(button => button.addEventListener("click",async()=>{
+      const target=state.characters.find(character=>character.id===button.dataset.select);if(!target)return;
+      button.disabled=true;state.activeId=target.id;await loadPortraitForCharacter(target);unloadInactivePortraits();persist();layer.remove();render();
+    }));
+    $$('[data-delete]',layer).forEach(button => button.addEventListener("click",()=>{const character=state.characters.find(item=>item.id===button.dataset.delete);if(character&&confirm(`${character.name} und alle zugehörigen Daten wirklich löschen?`)){state.characters=state.characters.filter(item=>item.id!==character.id);pendingDeletedCharacters.add(character.id);markPortraitForDelete(character.id);ledgerLimits.delete(character.id);if(state.activeId===character.id)state.activeId=state.characters[0].id;persist();layer.remove();render();characterPicker()}}));
     $("#backup-character",layer).addEventListener("click",backupCharacter); $("#restore-character",layer).addEventListener("click",()=>$("#backup-file",layer).click()); $("#backup-file",layer).addEventListener("change",event=>restoreCharacter(event,layer)); $("#new-character",layer).addEventListener("click",()=>newCharacter(layer));
+    if(storageMode==="indexeddb"&&navigator.storage?.estimate){navigator.storage.estimate().then(({usage,quota})=>{const target=$("#storage-status",layer);if(!target)return;const used=Number(usage||0)/1024/1024,available=Number(quota||0)/1024/1024;target.textContent=`Lokaler Speicher: IndexedDB v2 aktiv · ${used.toFixed(1)} MB belegt${available?` · Quote ca. ${available.toFixed(0)} MB`:""}`}).catch(()=>{})}
   };
   const newCharacter = previous => {
     const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Neuer Charakter</span><h2>Charakter anlegen</h2></div><button type="button" class="close">×</button></div><label>Name<input name="name" required placeholder="z. B. Johan Kümmerling" autocomplete="off"></label><label>Beruf oder Laufbahn<input name="career" placeholder="z. B. Apotheker" autocomplete="off"></label><button class="full-button">Charakter anlegen</button></form>`);
-    layer.classList.add("high"); $(".close",layer).addEventListener("click",()=>layer.remove()); $("form",layer).addEventListener("submit",event=>{event.preventDefault();const data=new FormData(event.currentTarget);const character=ensureCharacter({id:id(),name:String(data.get("name")).trim(),career:String(data.get("career")).trim()||"Abenteurer",balance:0,transactions:[],inventory:[],storages:[],sheet:defaultSheet()});state.characters.push(character);state.activeId=character.id;layer.remove();previous.remove();render();characterSheet("profile")}); if(!isIOSLike()) $("input",layer).focus();
+    layer.classList.add("high"); $(".close",layer).addEventListener("click",()=>layer.remove()); $("form",layer).addEventListener("submit",event=>{event.preventDefault();const data=new FormData(event.currentTarget);const character=ensureCharacter({id:id(),name:String(data.get("name")).trim(),career:String(data.get("career")).trim()||"Abenteurer",balance:0,transactions:[],inventory:[],storages:[],sheet:defaultSheet()});state.characters.push(character);state.activeId=character.id;persist();layer.remove();previous.remove();render();characterSheet("profile")}); if(!isIOSLike()) $("input",layer).focus();
   };
 
   const sheetTabs = activeTab => `<nav class="sheet-tabs" aria-label="Charakterbogen"><button data-sheet-tab="profile" class="${activeTab==="profile"?"active":""}">Profil</button><button data-sheet-tab="career" class="${activeTab==="career"?"active":""}">Karriere</button><button data-sheet-tab="combat" class="${activeTab==="combat"?"active":""}">Kampf</button><button data-sheet-tab="skills" class="${activeTab==="skills"?"active":""}">Skills</button><button data-sheet-tab="magic" class="${activeTab==="magic"?"active":""}">Magie</button></nav>`;
@@ -571,7 +801,7 @@
     c.scheme=sanitizeCareerScheme(scheme);
     const intro=`<div class="career-summary"><article><small>Quelle</small><strong>${c.type==="custom"?"Freier Eintrag":"Grundregelwerk"}</strong></article><article><small>Typ</small><strong>${c.type==="basic"?"Basic":c.type==="advanced"?"Advanced":"Frei"}</strong></article><article><small>EP verfügbar</small><strong>${available}</strong></article><article><small>Schema</small><strong>${def?.verifiedScheme?"GRW hinterlegt":"manuell"}</strong></article></div>${def?.notes?`<p class="character-note">${escapeHtml(def.notes)}</p>`:""}`;
     syncAdvancedFromCareerScheme(character,c,false);
-    const schemeBody=`<div class="scheme-grid">${(RULES.advanceableCharacteristics||[]).map(key=>{const max=num(scheme[key],0),bought=purchasedAdvance(character,key),step=advanceStep(key),cost=num(RULES.rules?.advanceCost,100),canBuy=max>0&&bought+step<=max&&available>=cost,canRefund=max>0&&bought>=step;return `<article class="scheme-card"><small>${key}</small><strong>${max?signed(max):"0"}</strong><span>Schema · gekauft ${bought?signed(bought):"0"}</span>${max?`<div class="scheme-actions"><button class="mini-button" data-buy-advance="${key}" ${canBuy?"":"disabled"}>+${step} kaufen · ${cost} EP</button><button class="mini-button advance-refund" data-refund-advance="${key}" ${canRefund?"":"disabled"}>−${step} zurück · +${cost} EP</button></div>`:`<span>—</span>`}</article>`}).join("")}</div><p class="hint"><strong>Advanced</strong> zeigt nur das Potential der aktuellen Karriere. Erst ein gekaufter Advance erhöht <strong>Current</strong>. Mit <strong>zurück</strong> kannst du einen versehentlich gekauften Schritt wieder entfernen; die ${num(RULES.rules?.advanceCost,100)} EP werden erstattet. Bereits in früheren Karrieren gekaufte Advances bleiben erhalten und zählen gegen das Maximum des neuen Schemas.</p>`;
+    const schemeBody=`<div class="scheme-grid">${(RULES.advanceableCharacteristics||[]).map(key=>{const max=num(scheme[key],0),bought=purchasedAdvance(character,key),step=advanceStep(key),cost=num(RULES.rules?.advanceCost,100),withinScheme=max>0&&bought+step<=max,hasXp=available>=cost,canBuy=withinScheme&&hasXp,canRefund=max>0&&bought>=step;const buyReason=!withinScheme?"Maximum des Schemas erreicht":!hasXp?`${cost-available} EP fehlen`:"Kauf möglich";return `<article class="scheme-card"><small>${key}</small><strong>${max?signed(max):"0"}</strong><span>Schema · gekauft ${bought?signed(bought):"0"}</span>${max?`<div class="scheme-actions"><button type="button" class="mini-button advance-buy ${canBuy?"":"is-blocked"}" data-buy-advance="${key}" aria-disabled="${canBuy?"false":"true"}" title="${escapeHtml(buyReason)}">+${step} kaufen · ${cost} EP</button><button type="button" class="mini-button advance-refund" data-refund-advance="${key}" ${canRefund?"":"disabled"}>−${step} zurück · +${cost} EP</button>${canBuy?"":`<small class="advance-action-state">${escapeHtml(buyReason)}</small>`}</div>`:`<span>—</span>`}</article>`}).join("")}</div><p class="hint"><strong>Advanced</strong> zeigt nur das Potential der aktuellen Karriere. Erst ein gekaufter Advance erhöht <strong>Current</strong>. Der Kaufknopf bleibt auf Touch-Geräten antippbar; falls EP fehlen oder das Schema ausgeschöpft ist, zeigt die App den Grund an. Mit <strong>zurück</strong> kannst du einen versehentlich gekauften Schritt wieder entfernen; die ${num(RULES.rules?.advanceCost,100)} EP werden erstattet. Bereits in früheren Karrieren gekaufte Advances bleiben erhalten und zählen gegen das Maximum des neuen Schemas.</p>`;
     const skillBody=skills.length?`<div class="career-skills-list">${skills.map(skill=>{const done=learned.has(skill.name);return `<article class="career-skill-row ${done?"learned":""}"><div><strong>${escapeHtml(skill.name)}</strong><small>${escapeHtml(skill.note||"Karriere-Skill")}</small></div>${done?`<span class="skill-state">gelernt</span>`:`<button class="mini-button" data-learn-career-skill="${escapeHtml(skill.name)}" data-career-note="${escapeHtml((skill.note||"")+` · ${c.name}`)}">Lernen · 100 EP</button>`}</article>`}).join("")}</div>`:`<p class="hint">Für freie Karrieren können Skills weiterhin manuell hinzugefügt werden.</p>`;
     const historyBody=history.length?`<div class="career-history-list">${history.map((entry,index)=>{const oldScheme=mergedCareerScheme(entry);const summary=(RULES.advanceableCharacteristics||[]).filter(key=>num(oldScheme[key],0)>0).map(key=>`${key} +${num(oldScheme[key],0)}`).join(" · ");return `<article class="career-history-row"><div><strong>${escapeHtml(entry.name)}</strong><small>${entry.type==="basic"?"Basic":entry.type==="advanced"?"Advanced":"Frei"}${entry.archivedAt?` · ${new Date(entry.archivedAt).toLocaleDateString("de-DE")}`:""}</small>${summary?`<span class="career-history-scheme">${escapeHtml(summary)}</span>`:""}</div><button class="mini-button" data-restore-career="${index}">Aktivieren</button></article>`}).join("")}</div>`:`<div class="empty compact"><h3>Noch keine früheren Karrieren</h3><p>Beim Karrierewechsel kann die bisherige Karriere automatisch archiviert werden.</p></div>`;
     return `${sheetBox("Grundregelwerk",escapeHtml(c.name),`<button class="mini-button" id="choose-career">Karriere wählen</button>`,intro,"career-box")}${sheetBox("Advance Scheme","Advanced",`<button class="mini-button" id="edit-career-scheme">Werte bearbeiten</button>`,schemeBody,"career-scheme-box")}${sheetBox("Karriere-Skills",`${skills.filter(skill=>!learned.has(skill.name)).length} offen`,"",skillBody,"career-skill-box")}${sheetBox("Frühere Karrieren",`${history.length} gespeichert`,"",historyBody,"career-history-box")}`;
@@ -633,26 +863,26 @@
   const portraitFileToDataUrl = file => new Promise((resolve,reject)=>{
     if(!file||!/^image\//i.test(file.type)){reject(new Error("Bitte eine Bilddatei wählen."));return}
     if(file.size>15*1024*1024){reject(new Error("Das Bild ist zu groß. Bitte maximal 15 MB verwenden."));return}
-    const reader=new FileReader();
-    reader.onerror=()=>reject(new Error("Das Bild konnte nicht gelesen werden."));
-    reader.onload=()=>{
-      const image=new Image();
-      image.onerror=()=>reject(new Error("Das Bildformat konnte nicht verarbeitet werden."));
-      image.onload=()=>{
+    const image=new Image();
+    const objectUrl=URL.createObjectURL(file);
+    const cleanup=()=>URL.revokeObjectURL(objectUrl);
+    image.onerror=()=>{cleanup();reject(new Error("Das Bildformat konnte nicht verarbeitet werden."))};
+    image.onload=()=>{
+      try{
         const maxSide=900;
         const scale=Math.min(1,maxSide/Math.max(image.naturalWidth||1,image.naturalHeight||1));
         const width=Math.max(1,Math.round(image.naturalWidth*scale));
         const height=Math.max(1,Math.round(image.naturalHeight*scale));
         const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;
         const ctx=canvas.getContext("2d");
+        if(!ctx)throw new Error("Bildverarbeitung wird von diesem Browser nicht unterstützt.");
         ctx.fillStyle="#d8c8a8";ctx.fillRect(0,0,width,height);ctx.drawImage(image,0,0,width,height);
         const dataUrl=canvas.toDataURL("image/jpeg",.82);
-        if(dataUrl.length>1500000){reject(new Error("Das komprimierte Portrait ist noch zu groß für den lokalen Speicher."));return}
-        resolve(dataUrl);
-      };
-      image.src=String(reader.result||"");
+        if(dataUrl.length>MAX_PORTRAIT_DATA_URL)throw new Error("Das komprimierte Portrait ist ungewöhnlich groß. Bitte ein kleineres Bild verwenden.");
+        cleanup();resolve(dataUrl);
+      }catch(error){cleanup();reject(error instanceof Error?error:new Error("Das Portrait konnte nicht verarbeitet werden."))}
     };
-    reader.readAsDataURL(file);
+    image.src=objectUrl;
   });
   const openPortrait = character => {
     const portrait=character.sheet.portrait;if(!portrait?.dataUrl)return;
@@ -664,13 +894,14 @@
     try{
       const dataUrl=await portraitFileToDataUrl(file);
       character.sheet.portrait={dataUrl,name:String(file.name||"Portrait").slice(0,180)};
-      try{persist()}catch(error){character.sheet.portrait=previous;throw new Error("Der lokale Speicher ist voll. Ein kleineres Portrait kann helfen.")}
+      markPortraitForSave(character);
+      try{await persist(true)}catch(error){character.sheet.portrait=previous;pendingPortraitChanges.delete(character.id);throw new Error("Das Portrait konnte nicht dauerhaft gespeichert werden. Bitte freien Gerätespeicher prüfen und erneut versuchen.")}
       layer.remove();render();characterSheet(tab);
     }catch(error){alert(error.message||"Das Portrait konnte nicht gespeichert werden.")}
   };
 
   const characterSheet = (tab="profile") => {
-    const character=ensureCharacter(active()),current=currentCareerRecord(character),content=tab==="career"?careerTab(character):tab==="combat"?combatTab(character):tab==="skills"?skillsTab(character):tab==="magic"?magicTab(character):profileTab(character);
+    const character=active(),current=currentCareerRecord(character),content=tab==="career"?careerTab(character):tab==="combat"?combatTab(character):tab==="skills"?skillsTab(character):tab==="magic"?magicTab(character):profileTab(character);
     const layer=modal(`<section class="sheet character-sheet tab-${tab}"><div class="handle"></div><div class="character-sheet-frame"><div class="sheet-watermark" aria-hidden="true">Warhammer Character Record</div><div class="heading character-sheet-heading"><div><span class="eyebrow">Warhammer Fantasy Roleplay</span><h2>Character Sheet</h2><p class="sheet-edition-line">1st Edition · Grundregelwerk</p></div><button class="close" aria-label="Schließen">×</button></div><div class="sheet-header-band"><div><small>Name</small><strong>${escapeHtml(character.name)}</strong></div><div><small>Karriere</small><strong>${escapeHtml(current.name)}</strong></div><div><small>Volk</small><strong>${escapeHtml(character.sheet.identity.race||"—")}</strong></div><div><small>Wunden</small><strong>${character.sheet.resources.currentWounds}/${woundsMax(character)}</strong></div></div>${sheetTabs(tab)}<div class="sheet-content tab-${tab}">${content}</div><p class="sheet-footer-note">WFRP 1E Core: Karrieren, Advance Schemes und Karriere-Skills sind hinterlegt. Freie Felder bleiben editierbar.</p></div></section>`);
     $(".close",layer).addEventListener("click",()=>layer.remove());
     $$('[data-sheet-tab]',layer).forEach(button=>button.addEventListener("click",()=>remountModal(layer,()=>characterSheet(button.dataset.sheetTab))));
@@ -679,7 +910,7 @@
     $("#portrait-file",layer)?.addEventListener("change",event=>{const file=event.target.files?.[0];if(file)savePortrait(file,layer,tab)});
     $("#portrait-open",layer)?.addEventListener("click",()=>openPortrait(character));
     $("#portrait-open-secondary",layer)?.addEventListener("click",()=>openPortrait(character));
-    $("#portrait-remove",layer)?.addEventListener("click",()=>{if(!confirm("Charakterportrait wirklich entfernen?"))return;character.sheet.portrait={dataUrl:"",name:""};persist();remountModal(layer,()=>characterSheet(tab))});
+    $("#portrait-remove",layer)?.addEventListener("click",()=>{if(!confirm("Charakterportrait wirklich entfernen?"))return;character.sheet.portrait={dataUrl:"",name:""};markPortraitForDelete(character.id);persist();remountModal(layer,()=>characterSheet(tab))});
     $$('[data-equip]',layer).forEach(button=>button.addEventListener("click",()=>{const item=character.inventory.find(entry=>entry.id===button.dataset.equip);if(!item)return;item.equipped=!item.equipped;persist();remountModal(layer,()=>characterSheet("combat"))}));$$('[data-edit-item]',layer).forEach(button=>button.addEventListener("click",()=>itemEditor("body",button.dataset.editItem,layer,{sheetTab:"combat"})));
     $("#choose-career",layer)?.addEventListener("click",()=>careerPicker(layer));$("#edit-career-scheme",layer)?.addEventListener("click",()=>careerSchemeEditor(layer));$$('[data-buy-advance]',layer).forEach(button=>button.addEventListener("click",()=>buyAdvance(button.dataset.buyAdvance,layer)));$$('[data-refund-advance]',layer).forEach(button=>button.addEventListener("click",()=>refundAdvance(button.dataset.refundAdvance,layer)));$$('[data-restore-career]',layer).forEach(button=>button.addEventListener("click",()=>restoreCareerFromHistory(button.dataset.restoreCareer,layer)));$$('[data-learn-career-skill]',layer).forEach(button=>button.addEventListener("click",()=>learnCareerSkill(button.dataset.learnCareerSkill,layer,button.dataset.careerNote||"")));
     $("#add-skill",layer)?.addEventListener("click",()=>skillPicker(layer));$$('[data-edit-skill]',layer).forEach(button=>button.addEventListener("click",()=>skillEditor(button.dataset.editSkill,layer)));$$('[data-delete-skill]',layer).forEach(button=>button.addEventListener("click",()=>{const skill=character.sheet.skills.find(entry=>entry.id===button.dataset.deleteSkill);if(skill&&confirm(`${skill.name} löschen?`)){character.sheet.skills=character.sheet.skills.filter(entry=>entry.id!==skill.id);persist();remountModal(layer,()=>characterSheet("skills"))}}));
@@ -816,7 +1047,7 @@
 
   const transactionSheet = type => {
     const character=active(); const layer=modal(`<form class="sheet form"><div class="handle"></div><div class="heading"><div><span class="eyebrow">${escapeHtml(character.name)}</span><h2>${type==="income"?"Geld erhalten":"Bezahlen"}</h2></div><button type="button" class="close">×</button></div>${moneyFields()}<p class="conversion hidden"></p><p class="error hidden">Dafür enthält der Geldbeutel nicht genug Münzen.</p><label>Notiz<input name="note" placeholder="z. B. Übernachtung im Roten Mond" autocomplete="off"></label><button class="full-button ${type}" disabled>${type==="income"?"Dem Geldbeutel hinzufügen":"Ausgabe verbuchen"}</button></form>`);
-    layer.classList.add("high"); const form=$("form",layer),submit=$(".full-button",form),conversion=$(".conversion",form),error=$(".error",form); const check=()=>{const value=amountFromForm(form);const enough=type==="income"||value<=character.balance;conversion.classList.toggle("hidden",!value);conversion.textContent=value?`Entspricht ${label(value)}`:"";error.classList.toggle("hidden",enough);submit.disabled=!value||!enough}; $$('input[type="number"]',form).forEach(input=>input.addEventListener("input",check)); $(".close",layer).addEventListener("click",()=>layer.remove()); form.addEventListener("submit",event=>{event.preventDefault();const value=amountFromForm(form);if(!value||(type==="expense"&&value>character.balance))return;character.transactions.unshift({id:id(),type,amount:value,note:form.elements.note.value.trim()||(type==="income"?"Einnahme":"Ausgabe"),createdAt:new Date().toISOString()});character.balance+=type==="income"?value:-value;layer.remove();render()});
+    layer.classList.add("high"); const form=$("form",layer),submit=$(".full-button",form),conversion=$(".conversion",form),error=$(".error",form); const check=()=>{const value=amountFromForm(form);const enough=type==="income"||value<=character.balance;conversion.classList.toggle("hidden",!value);conversion.textContent=value?`Entspricht ${label(value)}`:"";error.classList.toggle("hidden",enough);submit.disabled=!value||!enough}; $$('input[type="number"]',form).forEach(input=>input.addEventListener("input",check)); $(".close",layer).addEventListener("click",()=>layer.remove()); form.addEventListener("submit",event=>{event.preventDefault();const value=amountFromForm(form);if(!value||(type==="expense"&&value>character.balance))return;character.transactions.unshift({id:id(),type,amount:value,note:form.elements.note.value.trim()||(type==="income"?"Einnahme":"Ausgabe"),createdAt:new Date().toISOString()});character.balance+=type==="income"?value:-value;persist();layer.remove();render()});
   };
 
   const storageSheet = () => {
@@ -898,7 +1129,7 @@
     const applyPreset=presetId=>{const preset=presetById(presetId);if(!preset)return;form.elements.name.value=preset.name;form.elements.type.value=preset.type;form.elements.enc.value=preset.enc||0;if(Number.isSafeInteger(preset.value)){const coins=splitCoins(preset.value);form.elements.gold.value=coins.gold||"";form.elements.silver.value=coins.silver||"";form.elements.brass.value=coins.brass||""} if(preset.type==="armor"){form.elements.armourMaterial.value=preset.material||"custom";RULES.locations.forEach(location=>form.elements[`ap-${location}`].value=preset.armour?.[location]||0)} if(preset.type==="weapon"){const pw=preset.weapon||{};form.elements.weaponMode.value=pw.mode||"melee";form.elements.weaponSkill.value=pw.skill||"";form.elements.weaponInitiative.value=pw.initiative||"0";form.elements.weaponToHit.value=pw.toHit||"0";form.elements.weaponDamage.value=pw.damage||"0";form.elements.weaponParry.value=pw.parry||"0";form.elements.weaponES.value=pw.effectiveStrength||"S";form.elements.weaponLoad.value=pw.load||"";form.elements.rangeShort.value=pw.rangeShort||"";form.elements.rangeLong.value=pw.rangeLong||"";form.elements.rangeExtreme.value=pw.rangeExtreme||""} if(form.elements.description && (preset.description||preset.rules))form.elements.description.value=preset.description||preset.rules||""; form.elements.note.value=preset.note||"";toggleFields()};
     toggleFields(); typeSelect.addEventListener("change",toggleFields); presetSelect.addEventListener("change",()=>applyPreset(presetSelect.value)); $(".close",layer).addEventListener("click",()=>layer.remove());
     const effectList=$("#item-effects-list",form);
-    $("#add-item-effect",form)?.addEventListener("click",()=>{effectList.insertAdjacentHTML("beforeend",itemEffectEditorRow({name:"",kind:typeSelect.value==="armor"?"armour":"weapon",enabled:true}));const rows=$$("[data-effect-row]",effectList);rows.at(-1)?.querySelector("[data-effect-name]")?.focus()});
+    $("#add-item-effect",form)?.addEventListener("click",()=>{effectList.insertAdjacentHTML("beforeend",itemEffectEditorRow({name:"",kind:typeSelect.value==="armor"?"armour":"weapon",enabled:true}));const rows=$$("[data-effect-row]",effectList);rows[rows.length-1]?.querySelector("[data-effect-name]")?.focus()});
     effectList?.addEventListener("click",event=>{const button=event.target.closest("[data-remove-item-effect]");if(button)button.closest("[data-effect-row]")?.remove()});
     form.addEventListener("submit",event=>{event.preventDefault();const f=event.currentTarget.elements;const effects=["armor","weapon"].includes(f.type.value)?$$("[data-effect-row]",event.currentTarget).map(row=>{const name=$("[data-effect-name]",row)?.value.trim()||"";const profileBonuses=Object.fromEntries(RULES.characteristics.map(stat=>[stat.key,num($(`[data-effect-bonus="${stat.key}"]`,row)?.value,0)]));return name?sanitizeItemEffect({name,kind:$("[data-effect-kind]",row)?.value||"trait",description:$("[data-effect-description]",row)?.value.trim()||"",enabled:Boolean($("[data-effect-enabled]",row)?.checked),profileBonuses}):null}).filter(Boolean):[];const saved=sanitizeItem({id:existing?.id||id(),name:f.name.value.trim(),quantity:num(f.quantity.value,1),enc:num(f.enc.value,0),value:amountFromForm(event.currentTarget),description:f.description.value.trim(),note:f.note.value.trim(),type:f.type.value,presetId:f.presetId.value,equipped:locationId==="body"?Boolean(f.equipped?.checked):false,armourMaterial:f.armourMaterial.value,armour:Object.fromEntries(RULES.locations.map(location=>[location,num(f[`ap-${location}`].value,0)])),weapon:{mode:f.weaponMode.value,skill:f.weaponSkill.value,specialist:String(f.weaponSkill.value).toLowerCase().includes("specialist weapon"),initiative:f.weaponInitiative.value,toHit:f.weaponToHit.value,damage:f.weaponDamage.value,parry:f.weaponParry.value,effectiveStrength:f.weaponES.value,load:f.weaponLoad.value,rangeShort:f.rangeShort.value,rangeLong:f.rangeLong.value,rangeExtreme:f.rangeExtreme.value},effects});if(existing)Object.assign(existing,saved);else target.push(saved);persist();layer.remove();previous.remove();render();if(returnContext.sheetTab)characterSheet(returnContext.sheetTab);else locationSheet(returnContext.locationId||locationId)});
   };
@@ -914,8 +1145,8 @@
     layer.classList.add("high");const form=$("form",layer),submit=$(".full-button",form),conversion=$(".conversion",form),error=$(".error",form);const check=()=>{const value=amountFromForm(form);const enough=value<=sourceMoney;conversion.classList.toggle("hidden",!value);conversion.textContent=value?`Entspricht ${label(value)}`:"";error.classList.toggle("hidden",enough);submit.disabled=!value||!enough};$$('input[type="number"]',form).forEach(input=>input.addEventListener("input",check));$(".close",layer).addEventListener("click",()=>layer.remove());form.addEventListener("submit",event=>{event.preventDefault();const value=amountFromForm(form);if(!value||value>sourceMoney)return;if(direction==="in"){character.balance-=value;storage.money+=value}else{storage.money-=value;character.balance+=value}persist();layer.remove();previous.remove();render();locationSheet(storage.id)});
   };
 
-  const backupCharacter = () => {
-    const character=active(); const payload={format:"altdorf-geldbeutel-charakter",version:8,createdAt:new Date().toISOString(),character:{name:character.name,career:character.career,balance:character.balance,transactions:character.transactions,inventory:character.inventory,storages:character.storages,sheet:character.sheet}}; const safeName=character.name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase()||"charakter"; const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const link=document.createElement("a"); link.href=url; link.download=`${safeName}-charakter.json`; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const backupCharacter = async () => {
+    const character=active(); await loadPortraitForCharacter(character); const payload={format:"altdorf-geldbeutel-charakter",version:8,createdAt:new Date().toISOString(),character:{name:character.name,career:character.career,balance:character.balance,transactions:character.transactions,inventory:character.inventory,storages:character.storages,sheet:character.sheet}}; const safeName=character.name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase()||"charakter"; const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const link=document.createElement("a"); link.href=url; link.download=`${safeName}-charakter.json`; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
   };
   const restoreCharacter = async (event,layer) => {
     const file=event.target.files?.[0]; if(!file)return;
@@ -925,13 +1156,25 @@
       if(typeof source.name!=="string"||!source.name.trim()||source.name.length>80)throw new Error("Ungültiger Charaktername"); if(typeof source.career!=="string"||source.career.length>100)throw new Error("Ungültige Laufbahn"); if(!Number.isSafeInteger(Number(source.balance))||Number(source.balance)<0)throw new Error("Ungültiger Münzstand"); if(!Array.isArray(source.transactions)||source.transactions.length>10000)throw new Error("Ungültiges Münzbuch");
       const transactions=source.transactions.map(item=>{if(!item||!["income","expense"].includes(item.type)||!Number.isSafeInteger(Number(item.amount))||Number(item.amount)<=0)throw new Error("Fehlerhafte Buchung");const createdAt=new Date(item.createdAt);if(Number.isNaN(createdAt.getTime()))throw new Error("Fehlerhaftes Datum");return{id:id(),type:item.type,amount:Number(item.amount),note:String(item.note||"Buchung").slice(0,300),createdAt:createdAt.toISOString()}});
       const restored=ensureCharacter({id:id(),name:source.name.trim(),career:source.career.trim()||"Abenteurer",balance:Number(source.balance),transactions,inventory:payload.version>=2&&Array.isArray(source.inventory)?source.inventory:[],storages:payload.version>=2&&Array.isArray(source.storages)?source.storages:[],sheet:payload.version>=3?source.sheet:defaultSheet()});
-      restored.inventory=restored.inventory.map(item=>({...item,id:id()})); restored.storages=restored.storages.map(storage=>({...storage,id:id(),items:storage.items.map(item=>({...item,id:id(),equipped:false}))})); restored.sheet.skills=restored.sheet.skills.map(skill=>({...skill,id:id()}));restored.sheet.spells=restored.sheet.spells.map(spell=>({...spell,id:id()})); state.characters.push(restored);state.activeId=restored.id;persist();layer.remove();render();alert(`${restored.name} wurde aus der Sicherung wiederhergestellt.`);
+      restored.inventory=restored.inventory.map(item=>({...item,id:id()})); restored.storages=restored.storages.map(storage=>({...storage,id:id(),items:storage.items.map(item=>({...item,id:id(),equipped:false}))})); restored.sheet.skills=restored.sheet.skills.map(skill=>({...skill,id:id()}));restored.sheet.spells=restored.sheet.spells.map(spell=>({...spell,id:id()})); state.characters.push(restored);state.activeId=restored.id;if(restored.sheet?.portrait?.dataUrl)markPortraitForSave(restored);persist();layer.remove();render();alert(`${restored.name} wurde aus der Sicherung wiederhergestellt.`);
     }catch(error){alert(`Die Sicherung konnte nicht gelesen werden: ${error.message}`)}finally{event.target.value=""}
   };
 
-  const undo = transactionId => {const character=active();const transaction=character.transactions.find(item=>item.id===transactionId);if(!transaction)return;const next=character.balance+(transaction.type==="income"?-transaction.amount:transaction.amount);if(next<0){alert("Diese Einnahme kann nicht rückgängig gemacht werden, solange das Geld bereits ausgegeben ist.");return}character.balance=next;character.transactions=character.transactions.filter(item=>item.id!==transactionId);render()};
+  const undo = transactionId => {const character=active();const transaction=character.transactions.find(item=>item.id===transactionId);if(!transaction)return;const next=character.balance+(transaction.type==="income"?-transaction.amount:transaction.amount);if(next<0){alert("Diese Einnahme kann nicht rückgängig gemacht werden, solange das Geld bereits ausgegeben ist.");return}character.balance=next;character.transactions=character.transactions.filter(item=>item.id!==transactionId);persist();render()};
   const bind=()=>{$("#open-characters").addEventListener("click",characterPicker);$("#open-character-sheet").addEventListener("click",()=>characterSheet("profile"));$("#open-storage").addEventListener("click",storageSheet);$$('[data-transaction]').forEach(button=>button.addEventListener("click",()=>transactionSheet(button.dataset.transaction)))};
 
-  mount();
+  const start = async () => {
+    try{
+      await initializeStorage();
+      mount();
+      document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")persist().catch(error=>console.error("Speichern beim Verlassen fehlgeschlagen.",error))});
+      window.addEventListener("pagehide",()=>{persist().catch(error=>console.error("Speichern beim Schließen fehlgeschlagen.",error))});
+    }catch(error){
+      console.error("App-Start fehlgeschlagen.",error);
+      const app=$("#app");
+      if(app){app.className="loading";app.textContent=error?.code==="IDB_BLOCKED"?error.message:"Der lokale Speicher konnte nicht geöffnet werden. Bitte die Seite neu laden. Deine vorhandenen Daten wurden nicht überschrieben."}
+    }
+  };
+  start();
   if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 })();

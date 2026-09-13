@@ -1,100 +1,115 @@
-# Validierung – Belastung & Portrait
+# Validierung – Kompatibilität, Performance und Datenspeicher
 
-## Belastungsregeln
+Stand: 13.09.2026
 
-Implementierte Formel:
+## 1. Statische Prüfungen
 
-- Normale Traglast: `S × 100 ENC`
-- Zwerg: `S × 200 ENC`
-- Überlast: `max(0, getragene ENC − Traglast)`
-- Movement-Abzug: `ceil(Überlast / 50)`
-- Effektive Movement Allowance: `max(0, Original-M − Movement-Abzug)`
-
-Geprüfte Grenzfälle für M 4 / S 4:
-
-- 400 ENC → M 4
-- 434 ENC → 34 ENC zu viel → −1 → M 3
-- 450 ENC → 50 ENC zu viel → −1 → M 3
-- 451 ENC → 51 ENC zu viel → −2 → M 2
-- 500 ENC → 100 ENC zu viel → −2 → M 2
-- Zwerg mit S 4: 800 ENC ohne Abzug; ab 801 ENC → −1
-
-Der Original-M-Wert wird nicht verändert und bleibt im Profil sichtbar.
-
-## Portrait
-
-- Bildupload ist auf Bilddateien beschränkt.
-- Eingangsdateien über 15 MB werden abgelehnt.
-- Das Bild wird auf maximal 900 px Kantenlänge skaliert und als JPEG komprimiert.
-- Gespeicherte Data-URLs sind auf 1.500.000 Zeichen begrenzt.
-- Der Portraitdatensatz wird durch `sanitizeSheet()` geprüft.
-- Die bestehende Charakter-Sicherung enthält das komplette `sheet`-Objekt und damit auch das Portrait.
-
-## Technische Prüfung
+Bestanden:
 
 - `node --check app.js`
 - `node --check wfrp1e-data.js`
-- ZIP-Integrität wird vor Ausgabe geprüft.
+- `node --check sw.js`
+- CSS mit `tinycss2` geparst: **0 Parse-Fehler**
+- `index.html` geparst: keine doppelten statischen IDs
+- WFRP-Datenbank geladen und geprüft:
+  - 14 Charakteristika
+  - 129 Karriere-Presets / 129 Detaildatensätze
+  - 133 Skills
+  - 155 Zauber
+  - 55 Waffen-Presets
+  - 19 Rüstungs-Presets
+  - 85 allgemeine Ausrüstungs-Presets
+  - 0 fehlende Karriere-Detaildatensätze
 
+## 2. Browser-Smoke-Test
 
-## Consumer-Guide-Daten
+Die UI wurde zusätzlich in echtem Headless-Chromium gerendert. Da die Build-Umgebung Navigation zu lokalen/externen HTTP-Origins per Organisationsrichtlinie blockiert, wurde für diesen UI-Test die Anwendung in ein isoliertes Browserdokument eingebettet und der Speicheradapter auf einen Test-localStorage umgebogen. Dadurch lassen sich Rendering, Touch-Ziele, Formulare und JavaScript-UI testen; die echte IndexedDB-Implementierung des Browsers ist in diesem speziellen Testaufbau nicht erreichbar.
 
-- Neue/erhaltene Ausrüstungs-Presets gesamt: 84
-- Subsistence S. 293: 10 Zeilen
-- Miscellaneous Items S. 296: 69 Zeilen (10 Carrying, 15 Household, 7 Illumination, 11 Musical Instruments, 23 Tools, 3 Reading/Writing)
-- Vorherige Munition/Zubehör-Presets beibehalten: 5
-- Doppelte Preset-IDs: 0
+Getestete Viewports:
 
-## Waffen- und Rüstungsprüfung
+- Android-artig: **390 × 844 CSS px**
+- iPad-artig: **820 × 1180 CSS px**
+- Windows/Edge-artig bei ungefähr 125-%-Skalierung: **1093 × 614 CSS px**
+- Windows/Edge-artig bei ungefähr 150-%-Skalierung: **910 × 512 CSS px**
+- Desktop: **1440 × 900 CSS px**
 
-Abgleich mit dem Grundregelwerk:
+Ergebnisse:
 
-- Consumer Guide S. 295: alle Rüstungszeilen vorhanden.
-- Consumer Guide S. 295: alle Waffenzeilen vorhanden; Munition/Zubehör wird als allgemeines Equipment geführt.
-- Kampf S. 120: alle Einträge der Weapon Modifiers Table mit den Preset-Werten abgeglichen.
-- Kampf S. 128: alle Einträge der Missile Weapon Chart mit Reichweite und Effective Strength abgeglichen.
-- Korrigiert: Repeating Crossbow ES 1.
-- Korrigiert: Halberd To Hit -10/0**.
-- Fehlende Tabellenzeilen ergänzt: Sword, Foil, Garotte, Hook, Knuckle Duster, Scabbard, Back Plate, Gauntlets, Knight's Helm, Unrimmed Shield.
-- Back Plate und Gauntlets: keine automatischen AP erfunden, da die Trefferzonen-/AP-Tabelle des Kampfkapitels dafür keinen separaten Eintrag vorgibt.
+- kein horizontaler Root-Overflow,
+- kein horizontaler Overflow im Charakterbogen,
+- Android: Advance-Kaufknöpfe sichtbar, ca. 46 px hoch und anklickbar,
+- iPad/Desktop: Advance-Kaufknöpfe anklickbar,
+- Advance-Kauf verändert den gekauften Wert im UI,
+- unter 1400 CSS px werden Profilkarten verwendet,
+- ab 1400 CSS px wird die klassische Profiltabelle verwendet,
+- Profil-/Karriere-/Kampf-/Skills-/Magie-Tabs rendern ohne JavaScript-Fehler,
+- Textfelder erhalten auf Android-/iPad-/Edge-Testprofilen korrekt Fokus,
+- Portrait-Upload mit PNG erfolgreich; Bild wird aufbereitet und angezeigt.
 
-## Gambeson-Hausregel
+## 3. Performance
 
-- Materialwert `gambeson` wird von Migration/Sanitizer akzeptiert.
-- Ohne Metall: 0/1 AP auf den im Gegenstand markierten Trefferzonen.
-- Mit Metall auf derselben Trefferzone: Gambeson wird dort als fester +1 AP addiert.
-- Anzeige nennt explizit „Gambeson unter Metall +1 AP“.
+Behobene Engpässe:
 
-## Advance-Korrektur & Gegenstandseffekte
+- `render()` schreibt nicht mehr bei jeder reinen UI-Neuzeichnung in den Speicher.
+- Charaktere werden in IndexedDB einzeln gespeichert; eine kleine Änderung schreibt nicht mehr den vollständigen Datenbestand aller Charaktere.
+- Portraits werden nur bei tatsächlicher Änderung neu als Blob geschrieben.
+- Beim Start wird nur das Portrait des aktiven Charakters aus IndexedDB geladen.
+- Der aktive Charakter wird bei Render/Tabwechsel nicht mehr vollständig neu sanitisiert/kopiert.
+- `Intl.DateTimeFormat` wird für das Münzbuch nur einmal erzeugt.
+- Das Münzbuch rendert zunächst maximal 250 Buchungen.
 
-Geprüft:
+Performance-Stresstest im Headless-Browser:
 
-- `app.js` und `wfrp1e-data.js` bestehen `node --check`.
-- Karriereansicht enthält einen separaten Rücknahme-Button pro kaufbarem Profilwert.
-- Eine Rücknahme reduziert `purchased` um genau einen regeltypischen Schritt (+10 bzw. +1) und erhöht `xpAvailable` um die Advance-Kosten.
-- Gegenstandseffekte werden durch `sanitizeItem()` dauerhaft mitgespeichert und damit auch von der bestehenden Backup-/Restore-Logik erfasst.
-- Waffen/Rüstungen können mehrere Effekte mit Name, Kategorie, Beschreibung und Aktivstatus erhalten.
-- Nur Effekte aktiv angelegter/griffbereiter Waffen und Rüstungen erscheinen im Kampf-Reiter.
-- Im Bereich „Magische Effekte“ werden nun alle aktivierten Zauber sowie aktive Ausrüstungseffekte aufgeführt.
+- Testdaten: **10.000 Buchungen**
+- Initial gerenderte DOM-Zeilen: **250**
+- Nach „Weitere anzeigen“: **500**
+- Initialer Testaufbau/Render in der Build-Umgebung: ca. **0,33 s**
 
-## Prüfung iPad-Eingabe & Gegenstandsbeschreibungen
+Der Zeitwert ist kein Geräte-Benchmark, bestätigt aber, dass nicht mehr 10.000 DOM-Zeilen gleichzeitig erzeugt werden.
 
-- `app.js`: `node --check` bestanden.
-- `wfrp1e-data.js`: `node --check` bestanden.
-- Gegenstandsmodell enthält ein rückwärtskompatibles `description`-Feld.
-- Gegenstandseditor liest und speichert `description`.
-- Beschreibung wird sowohl in `Truhen & Lager` als auch im Kampf-Inventar über ein `<details>`-Element dargestellt.
-- iPadOS/iOS-Erkennung berücksichtigt klassische iPads sowie iPadOS mit Desktop-User-Agent (`MacIntel` + Touchpunkte).
-- Touch-Fokus wird delegiert am Dialog behandelt und funktioniert damit auch für dynamisch hinzugefügte Eingabefelder.
-- iPadOS/iOS-Autofokus beim Öffnen der betroffenen Formulare wurde entfernt.
-- Cache-Busting in `index.html` und neuer Service-Worker-Cache wurden gesetzt.
-- Ein echter iPad-Gerätetest ist in dieser Build-Umgebung nicht möglich; die Korrektur basiert auf dem identifizierten Safari/PWA-Fokusproblem und wurde statisch/syntaktisch geprüft.
+## 4. IndexedDB Schema v2
 
+Interne Stores:
 
-## 2026-09-12 – Insanity / Profil-Effekte / Knight's Helm
+- `app-state`: kleine Metadaten wie aktive Charakter-ID,
+- `characters`: ein Datensatz pro Charakter,
+- `portraits`: Portraits separat als Blob.
 
-- [x] Backward-kompatible Sanitization für `sheet.mental`.
-- [x] Backward-kompatible Sanitization für `profileBonuses` auf Zaubern und Gegenstandseffekten.
-- [x] Aktive Profilboni wirken auf Start/Current und verschwinden beim Deaktivieren/Ablegen.
-- [x] Mail Coif + Knight's Helm als erlaubte Schichtung; Pot Helmet entfernt.
-- [x] Service-Worker-Cache und Asset-Query aktualisiert.
+Migration:
+
+- vorhandene IndexedDB-v1-Daten werden beim Datenbank-Upgrade aus dem alten vollständigen `state`-Datensatz in einzelne Charakterdatensätze übertragen,
+- vorhandene Portrait-Blobs bleiben im bisherigen Portrait-Store,
+- falls noch keine IndexedDB-Daten existieren, werden weiterhin localStorage v9 sowie v1-v8 erkannt und einmalig übernommen,
+- alte localStorage-Daten werden nicht automatisch gelöscht,
+- Backupformat bleibt Version 8 und Restore akzeptiert Version 1-8.
+
+Sicherheitsentscheidung: Ein durch einen noch geöffneten älteren App-Tab blockiertes IndexedDB-Upgrade fällt **nicht** still auf möglicherweise veraltete localStorage-Daten zurück. Die App weist stattdessen darauf hin, andere Tabs/Fenster zu schließen. Das verhindert auseinanderlaufende Datenstände.
+
+Falls ein Browser IndexedDB tatsächlich überhaupt nicht unterstützt, bleibt der bisherige localStorage-Fallback bestehen.
+
+## 5. Portrait-Verarbeitung
+
+- nur Bilddateien,
+- Eingangsdatei maximal 15 MB,
+- maximal 900 px längste Kante,
+- JPEG-Ausgabe mit Qualität 0,82,
+- komprimierte Data-URL wird zusätzlich auf maximal 8 MiB begrenzt,
+- Quelldatei wird über `URL.createObjectURL()` dekodiert; dadurch entsteht beim Einlesen keine zusätzliche vollständige Base64-Kopie der Originaldatei,
+- Fehler bei Canvas/Image-Verarbeitung werden sauber abgefangen,
+- in IndexedDB wird das fertige Portrait als Blob getrennt vom Charakterdatensatz gespeichert.
+
+## 6. Service Worker / Offline
+
+Korrigiert:
+
+- Cache-Version erhöht,
+- Core-Dateien werden mit `cache: reload` vorgecached,
+- Versions-Querystrings (`app.js?v=...`) werden beim Offline-Match ignoriert,
+- Navigation erhält ausschließlich einen HTML-Fallback,
+- fehlende Bilder/Fonts werden nicht mehr fälschlich mit `index.html` beantwortet,
+- optionale Design-Assets dürfen die komplette Service-Worker-Installation nicht mehr abbrechen,
+- alte Cache-Versionen werden bei Aktivierung entfernt.
+
+## 7. Plattformhinweise
+
+Die App verwendet nur APIs, die in aktuellen Safari/iPadOS/macOS, Chrome/Android, Edge/Windows und Firefox vorhanden sind. Ein physischer Geräte-Test auf jedem einzelnen Betriebssystem ist in dieser Build-Umgebung nicht möglich; die problematischen Layoutbreiten und Touch-Interaktionen wurden deshalb zusätzlich in Chromium mit entsprechenden Viewports/User-Agents geprüft.

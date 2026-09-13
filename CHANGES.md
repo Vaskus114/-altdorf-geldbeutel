@@ -167,3 +167,38 @@
 - Temporäre Boni werden wie Skill-/Talentboni im Profil unter **Start** mit `*` angezeigt und in **Current** eingerechnet. Tooltips nennen die Quelle.
 - Kampf → Magische Effekte zeigt die konkrete Profilwirkung (z. B. `I +10`).
 - Rüstungsschichtung korrigiert: **Mail Coif + Knight's Helm** ist regelkonform erlaubt. **Mail Coif + Pot Helmet** gibt laut Consumer Guide keinen zusätzlichen Rüstungsbonus und wird nicht mehr als Standard-Schichtung freigegeben.
+
+## Android / Windows Edge Kompatibilitätsfix (2026-09-13)
+
+- Advance-Kaufknöpfe sind bei vorhandener Advance-Schema-Stufe auf Touch-Geräten immer antippbar. Fehlen EP oder ist das Schema ausgeschöpft, zeigt die App nun den konkreten Grund statt eines stummen deaktivierten Knopfs.
+- Advance-Schema-Karten werden auf schmalen Android-Displays einspaltig dargestellt und haben größere Touch-Ziele.
+- Das Character-Sheet-Layout hängt nicht mehr von CSS `:has()` ab; die Modal-Klasse wird in JavaScript gesetzt.
+- Windows Edge bei 125/150 % Anzeigeskalierung: die klassische Profil-Tabelle wird erst ab 1400 CSS-Pixeln eingeblendet. Darunter werden die robusteren Profilkarten verwendet.
+- `vh`/`dvh`-Fallbacks und `text-size-adjust:100%` ergänzen die Browser-Kompatibilität.
+- `Array.prototype.at()` wurde an einer dynamischen Editor-Stelle entfernt, damit ältere Android-WebViews nicht daran scheitern.
+
+
+## IndexedDB-Speicher (2026-09-13)
+
+- Primäre Speicherung von `localStorage` auf **IndexedDB** umgestellt.
+- Beim ersten Start liest die App vorhandene Daten aus `altdorf-geldbeutel-v9` bzw. den älteren v1-v8-Schlüsseln und übernimmt sie automatisch in IndexedDB.
+- Die alten localStorage-Daten werden bei der Migration **nicht gelöscht**; sie bleiben als Sicherheitsstand erhalten.
+- Charakterdaten liegen im Object Store `app-state`.
+- Portraits werden getrennt als echte **Blob-Daten** im Object Store `portraits` gespeichert; im eigentlichen Charakterdatensatz wird kein Base64-Bild mehr dauerhaft abgelegt.
+- Beim Start werden Portrait-Blobs für die bestehende Oberfläche wieder temporär als Data-URL geladen. Dadurch bleibt die bisherige UI und das Backup-Format kompatibel.
+- Charakter-Sicherungen bleiben im bestehenden JSON-Format Version 8 und enthalten weiterhin das Portrait. Alte Sicherungen Version 1-8 können weiterhin importiert werden.
+- Falls IndexedDB in einem Browser nicht verfügbar ist oder nicht geöffnet werden kann, existiert weiterhin ein localStorage-Fallback.
+- Im Charaktermenü wird angezeigt, ob IndexedDB aktiv ist; sofern der Browser `navigator.storage.estimate()` unterstützt, werden belegter Speicher und die ungefähr verfügbare Origin-Quote angezeigt.
+- Service-Worker-Cache auf `v17-indexeddb` und Asset-Query auf `20260913-indexeddb-v1` erhöht.
+
+## 13.09.2026 – Kompatibilitäts- & Performance-Härtung
+
+- IndexedDB-Schema v2: einzelne Charakterdatensätze statt vollständigem App-State pro Änderung.
+- Automatische Migration der bisherigen IndexedDB-v1-Daten.
+- Portraits werden nur bei Änderung geschrieben und beim Start nur für den aktiven Charakter geladen.
+- Unnötiges Speichern bei jedem `render()` entfernt; Änderungen speichern jetzt gezielt.
+- Münzbuch paginiert nach 250 Einträgen; weitere Einträge werden bei Bedarf nachgeladen.
+- Datumsformatierung des Münzbuchs gecacht.
+- iPad-Fokus-Workaround auf iOS/iPadOS begrenzt, damit Android sein natives Fokusverhalten behält.
+- Service Worker korrigiert: Querystring-kompatibler Offline-Cache, sauberer Navigationsfallback, optionale Assets blockieren die Installation nicht.
+- Blockiertes IndexedDB-Upgrade erzeugt keinen stillen Rückfall auf möglicherweise veraltete localStorage-Daten.
