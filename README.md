@@ -139,3 +139,7 @@ Im Charakter-Auswahlfenster zeigt die App den aktiven Speichertyp an. Unterstüt
 Die lokale Datenbank verwendet intern IndexedDB Schema v2. Charaktere liegen als einzelne Datensätze vor, Portraits separat als Blobs. Dadurch bleibt die App auch bei vielen Charakteren reaktionsfähiger. Bestehende IndexedDB-v1- und ältere localStorage-Daten werden automatisch übernommen; das externe Backupformat bleibt unverändert.
 
 Das Münzbuch lädt bei sehr langen Verläufen jeweils 250 Zeilen nach. Auf iPad/iPhone greift weiterhin der Safari-Fokus-Fix, während Android wieder ausschließlich sein natives Eingabefokus-Verhalten verwendet. Der Service Worker wurde für Offline-Betrieb und Cache-Updates überarbeitet.
+
+## Advance-Schema über mehrere Karrieren
+
+Advance-Schemes sind in WFRP 1E nicht kumulativ. Bereits gekaufte Advances früherer Karrieren zählen gegen das Maximum der aktuellen Karriere. Die Karriereansicht zeigt deshalb nun gekauftes Maximum und verbleibende Advances getrennt an.

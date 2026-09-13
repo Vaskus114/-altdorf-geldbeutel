@@ -202,3 +202,12 @@
 - iPad-Fokus-Workaround auf iOS/iPadOS begrenzt, damit Android sein natives Fokusverhalten behält.
 - Service Worker korrigiert: Querystring-kompatibler Offline-Cache, sauberer Navigationsfallback, optionale Assets blockieren die Installation nicht.
 - Blockiertes IndexedDB-Upgrade erzeugt keinen stillen Rückfall auf möglicherweise veraltete localStorage-Daten.
+
+## Advance-Schema: Karriereübergreifendes Maximum (2026-09-13)
+
+- Kaufgrenze für Charakteristika zentralisiert: Das Advance Scheme der aktuellen Karriere ist ein Gesamtmaximum gegenüber dem Starterprofil und wird nicht auf frühere Karrieren addiert.
+- Bereits in früheren Karrieren gekaufte Advances werden vollständig auf das Maximum der neuen Karriere angerechnet.
+- Beispiel: bereits A +1 gekauft, neue Karriere A +2 -> genau ein weiterer A-Advance ist offen; danach wird der Kaufbutton deaktiviert.
+- Die Karriereanzeige zeigt nun `gekauft / Maximum / noch offen`, damit der verbleibende Spielraum sofort erkennbar ist.
+- Skill-, Talent- und aktive Magieboni verändern weiterhin den angezeigten Profilwert, zählen aber nicht als gekaufte Karriere-Advances.
+- Die gleiche zentrale Prüfung wird sowohl für die Anzeige als auch beim tatsächlichen Kauf verwendet, damit UI und Kaufregel nicht auseinanderlaufen können.

@@ -113,3 +113,17 @@ Korrigiert:
 ## 7. Plattformhinweise
 
 Die App verwendet nur APIs, die in aktuellen Safari/iPadOS/macOS, Chrome/Android, Edge/Windows und Firefox vorhanden sind. Ein physischer Geräte-Test auf jedem einzelnen Betriebssystem ist in dieser Build-Umgebung nicht möglich; die problematischen Layoutbreiten und Touch-Interaktionen wurden deshalb zusätzlich in Chromium mit entsprechenden Viewports/User-Agents geprüft.
+
+## Advance-Cap Regressionstest
+
+Geprüfte Logik:
+
+- gekauft +0, Schema A +1 -> 1 Kauf möglich
+- gekauft +1, Schema A +1 -> kein weiterer Kauf
+- gekauft +1, Schema A +2 -> genau 1 weiterer Kauf möglich
+- gekauft +2, Schema A +2 -> kein weiterer Kauf; Kaufbutton deaktiviert
+- gekauft +2, Schema A +3 -> genau 1 weiterer Kauf möglich
+- gekauft +10, Schema WS +20 -> genau 1 weiterer +10-Kauf möglich
+- gekauft +20, Schema WS +20 -> kein weiterer Kauf
+
+Skill-, Talent- und Magieboni werden bei dieser Grenze absichtlich nicht mitgerechnet, da sie keine gekauften Career Advances sind.
