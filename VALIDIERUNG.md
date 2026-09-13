@@ -140,3 +140,30 @@ Geprüft:
 - Service-Worker-Cache wurde auf `altdorf-geldbeutel-core-v20-ui-scale` erhöht.
 
 Hinweis: Ein echter Geräte-Test auf Safari/iPadOS, Android Chrome und Windows Edge ist in dieser Umgebung nicht möglich. Die Skalierung verwendet bewusst CSS `zoom`, das auf den Zielbrowsern Layout und Hit-Testing gemeinsam skaliert; `transform: scale()` wird nicht verwendet.
+
+## Skalierung v3 – Zusatzprüfung 13.09.2026
+
+- `app.js`: `node --check` bestanden.
+- `sw.js`: `node --check` bestanden.
+- keine dynamische Aenderung des `meta[name=viewport]` mehr in `app.js` oder `index.html`.
+- Android-PWA verwendet dieselbe Oberflaechenskalierung wie Browserbetrieb; Performance-Modus bleibt separat aktivierbar.
+- `html` selbst bleibt immer bei `zoom: 1`; fixed Modals bleiben damit im echten Viewport.
+- effektive Breite/Hoehe werden aus `visualViewport` (Fallback `innerWidth/innerHeight`) berechnet.
+- `visualViewport.resize` aktualisiert die Grenzen bei Rotation, Safari-Leisten und Bildschirmtastatur.
+- Service-Worker-Cache auf `v22-scale-performance-v3` angehoben.
+
+## Skalierung v4 – statische Kompatibilitätsprüfung
+
+Geprüft:
+- `app.js`: `node --check` bestanden.
+- `sw.js`: `node --check` bestanden.
+- `styles.css`: Parsing mit `tinycss2` ohne Syntaxfehler.
+- Media-Query-Breakpoints bleiben in CSS-Pixeln; UI-Deklarationen sind rem-basiert.
+- Kein App-weites CSS `zoom` oder `transform: scale()` mehr aktiv.
+- iOS-Eingabefelder besitzen eine 16px-Untergrenze.
+- zentrale Touch-Ziele besitzen auf `pointer: coarse` eine 44px-Untergrenze.
+- Skalierungswert wird vor CSS-Ladung angewendet und später von `app.js` konsistent übernommen.
+- Android-Leistungsmodus bleibt unabhängig von der Skalierung.
+
+Hinweis: Ein echter Gerätepark-Test auf physischem iPhone/iPad/Android/Windows/macOS ist in dieser Umgebung nicht möglich. Die v4-Lösung reduziert deshalb bewusst plattformspezifische Sonderwege und nutzt Standard-CSS (`rem`, normale Viewportgrößen, Overflow) als gemeinsame Basis.
+- VisualViewport-Listener reagiert nur auf Breitenänderungen; Tastatur-Höhenanimationen verursachen keinen Skalierungs-Reflow.

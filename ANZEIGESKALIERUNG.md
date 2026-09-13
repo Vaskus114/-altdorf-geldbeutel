@@ -1,8 +1,28 @@
-# Gerätespezifische Anzeigeskalierung
+# Anzeige-Skalierung v4
 
-- Bereich: 75–140 %, Schrittweite 5 %.
-- Speicherung: `localStorage`, Schlüssel `altdorf-geldbeutel-ui-scale-v1`.
-- Keine Änderung am IndexedDB-Schema und keine Auswirkung auf Charakter-Backups.
-- Technische Umsetzung: CSS `zoom` auf dem Dokument. Dadurch skalieren Text, Buttons, Dialoge, Charakterbogen und Lager gemeinsam, ohne `transform: scale()` und dessen typische Scroll-/Touch-Nebenwirkungen.
-- Responsive Sonderfall Profil: Die App berechnet `Viewportbreite / Skalierungsfaktor`. Unter 1400 effektiven Pixeln werden die Profilkarten erzwungen, darüber die klassische Tabelle.
-- Print: immer 100 %.
+Die Anzeigegröße wird ab dieser Version plattformunabhängig über die Root-Schriftgröße und `rem`-basierte UI-Maße umgesetzt.
+
+## Warum die alte Lösung ersetzt wurde
+
+Die bisherigen Varianten nutzten je nach Plattform CSS `zoom` bzw. viewportnahe Kompensationen. Das führte auf iOS bei großen Werten zu verschobenen/abgeschnittenen Dialogen und auf installierten Android-PWAs teilweise zu hoher Renderlast oder wirkungsloser Skalierung.
+
+## Neue Methode
+
+- 100 % = die normale Root-Schriftgröße des Browsers (typischerweise 16 px).
+- 75–140 % verändern nur die Root-Schriftgröße.
+- UI-Abstände, Schriftgrößen, Karten, Buttons, Bilder und Dialog-Innenmaße sind auf `rem` umgestellt.
+- Der Browser-Viewport bleibt unverändert.
+- Kein `transform: scale()` für die Anwendung.
+- Kein CSS `zoom` für die Anwendung.
+- Keine dynamische Änderung des Meta-Viewports.
+- Responsive Breakpoints bleiben an der echten Gerätebreite orientiert; für sehr dichte Bereiche des Charakterbogens werden zusätzlich effektive Breitenklassen verwendet.
+- Auf iOS bleiben Texteingaben mindestens 16 CSS-Pixel groß, damit Safari beim Fokussieren nicht selbst hineinzoomt.
+- Auf Touch-Geräten bleiben zentrale Bedienelemente mindestens 44 CSS-Pixel hoch.
+
+## Speicherung
+
+Die Anzeigegröße bleibt eine Geräteeinstellung in `localStorage` und wird nicht mit Charakter-Backups synchronisiert.
+
+## Android
+
+Der optionale Android-Leistungsmodus bleibt getrennt von der Skalierung bestehen und reduziert ausschließlich aufwendige Paint-Effekte.

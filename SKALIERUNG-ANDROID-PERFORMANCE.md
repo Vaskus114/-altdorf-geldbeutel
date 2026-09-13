@@ -1,9 +1,7 @@
-# Skalierung v2 & Android-Performance
+# Android-Leistungsmodus & Skalierung v4
 
-- Android verwendet fuer 75–140 % keinen globalen CSS-Zoom mehr, sondern einen angepassten Layout-Viewport.
-- Dadurch folgen Media Queries, Fixed-Dialoge und Touch-Ziele derselben effektiven Breite.
-- Die Skalierung wird beim Verschieben des Reglers nur vorgewaehlt und erst beim Loslassen angewendet.
-- Auf Android ist standardmaessig ein Leistungsmodus aktiv. Er reduziert ausschliesslich teure Darstellungs-Effekte (Blur, grosse Schatten, Filter, Clip-Paths), nicht Funktionen oder Daten.
-- Der Leistungsmodus kann in den Anzeigeeinstellungen deaktiviert werden.
-- Desktop/iOS behalten CSS-Zoom; Fixed-Dialoge werden dabei explizit an die effektive Viewporthoehe/-breite angepasst, damit bei 125–140 % nichts abgeschnitten wird.
-- Die Einstellung bleibt geraetespezifisch in localStorage gespeichert.
+Die Skalierung selbst ist nicht mehr Android-spezifisch. Sie läuft auf allen Plattformen über dieselbe REM-basierte Methode.
+
+Der Android-Leistungsmodus bleibt optional aktiv und reduziert ausschließlich teure visuelle Effekte (große Schatten, Filter, Blur, Clip-Paths und einige permanente Dekorationsebenen). Regeln, Daten, IndexedDB und Bedienlogik werden dadurch nicht verändert.
+
+Das ist besonders für installierte Chrome-PWAs auf Mittelklasse-Geräten sinnvoll.

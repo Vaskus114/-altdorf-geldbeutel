@@ -11,6 +11,7 @@
   const UI_SCALE_MAX = 140;
   const UI_SCALE_STEP = 5;
   const isAndroidPlatform = /Android/i.test(navigator.userAgent || "");
+  const isIOSPlatform = /iPad|iPhone|iPod/.test(navigator.userAgent || "") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const clampUiScale = value => Math.max(UI_SCALE_MIN, Math.min(UI_SCALE_MAX, Math.round(Number(value) / UI_SCALE_STEP) * UI_SCALE_STEP || 100));
   const readUiScale = () => {
     try { return clampUiScale(localStorage.getItem(UI_SCALE_KEY) || localStorage.getItem(LEGACY_UI_SCALE_KEY) || 100); }
@@ -23,20 +24,13 @@
   };
   let uiScalePercent = readUiScale();
   let androidPerformanceMode = readAndroidPerformance();
-  const viewportMeta = () => document.querySelector('meta[name="viewport"]');
-  const androidBaseViewportWidth = () => {
-    // screen.width bleibt unter Chrome/Android vom per Meta-Viewport gesetzten Layout-Zoom unabhaengig.
-    const width=Number(window.screen?.width)||Number(window.visualViewport?.width)||Number(window.innerWidth)||390;
-    return Math.max(320,Math.round(width));
+  const viewportWidth = () => {
+    const vv=window.visualViewport;
+    return Math.max(280,Number(vv?.width)||Number(window.innerWidth)||Number(document.documentElement.clientWidth)||390);
   };
-  const applyAndroidViewportScale = percent => {
-    const meta=viewportMeta();
-    if(!meta) return androidBaseViewportWidth();
-    const factor=percent/100;
-    const baseWidth=androidBaseViewportWidth();
-    const targetWidth=Math.max(280,Math.round(baseWidth/factor));
-    meta.setAttribute("content",`width=${targetWidth},initial-scale=1,viewport-fit=cover,user-scalable=yes`);
-    return targetWidth;
+  const viewportHeight = () => {
+    const vv=window.visualViewport;
+    return Math.max(360,Number(vv?.height)||Number(window.innerHeight)||Number(document.documentElement.clientHeight)||700);
   };
   const applyAndroidPerformance = (enabled=androidPerformanceMode,{persistValue=false}={}) => {
     androidPerformanceMode=!!enabled && isAndroidPlatform;
@@ -51,27 +45,25 @@
     const factor=uiScalePercent/100;
     const root=document.documentElement;
     root.classList.toggle("platform-android",isAndroidPlatform);
-    let effectiveWidth;
-    if(isAndroidPlatform){
-      // Android: kein CSS-Zoom der kompletten App. Der Layout-Viewport wird stattdessen
-      // passend gesetzt. Dadurch reagieren Media Queries, fixed-Dialoge und Touch-Ziele
-      // natuerlich auf die vergroesserte/verkleinerte Oberflaeche und Chrome muss nicht
-      // den kompletten Dokumentbaum bei jedem Frame neu mit CSS zoom rasterisieren.
-      root.style.setProperty("--ui-scale","1");
-      effectiveWidth=applyAndroidViewportScale(uiScalePercent);
-    }else{
-      root.style.setProperty("--ui-scale",String(factor));
-      effectiveWidth=(window.innerWidth||root.clientWidth||0)/factor;
-    }
-    const effectiveHeight=(window.innerHeight||root.clientHeight||0)/(isAndroidPlatform?1:factor);
+    root.classList.toggle("platform-ios",isIOSPlatform);
+
+    // v4: plattformunabhaengige REM-Skalierung.
+    // Der Browser-Viewport, CSS zoom und transform:scale bleiben unangetastet.
+    // 100 % entsprechen der normalen Root-Schriftgroesse des Browsers; alle relevanten UI-Masse liegen
+    // in rem und wachsen/schrumpfen dadurch nativ mit dem Layout.
+    const rawWidth=viewportWidth();
+    const rawHeight=viewportHeight();
+    const effectiveWidth=rawWidth/factor;
+    const effectiveHeight=rawHeight/factor;
+    root.style.fontSize=`${uiScalePercent}%`;
+    root.style.setProperty("--ui-scale",String(factor));
     root.style.setProperty("--ui-effective-width",`${Math.max(280,effectiveWidth)}px`);
     root.style.setProperty("--ui-effective-height",`${Math.max(360,effectiveHeight)}px`);
-    root.style.setProperty("--ui-portrait-height",`${Math.max(240,effectiveHeight*0.72)}px`);
     root.dataset.uiScale=String(uiScalePercent);
     root.style.setProperty("--ui-profile-columns",String(effectiveWidth>=1000?4:effectiveWidth>=700?3:2));
     root.classList.toggle("ui-profile-compact-force",effectiveWidth<1400);
     root.classList.toggle("ui-profile-wide-force",effectiveWidth>=1400);
-    [520,560,760,900,1050].forEach(limit=>root.classList.toggle(`ui-effective-${limit}`,effectiveWidth<=limit));
+    [390,430,520,560,620,760,900,1050].forEach(limit=>root.classList.toggle(`ui-effective-${limit}`,effectiveWidth<=limit));
     applyAndroidPerformance(androidPerformanceMode);
     if(persistValue){
       try { localStorage.setItem(UI_SCALE_KEY,String(uiScalePercent)); } catch (_) {}
@@ -757,14 +749,14 @@
         <div class="display-scale-actions"><button type="button" class="secondary-button" data-scale-delta="-${UI_SCALE_STEP}">− ${UI_SCALE_STEP}%</button><button type="button" class="secondary-button" id="ui-scale-reset">100 % zurücksetzen</button><button type="button" class="secondary-button" data-scale-delta="${UI_SCALE_STEP}">+ ${UI_SCALE_STEP}%</button></div>
         <p class="hint" id="ui-scale-layout-note"></p>
         ${isAndroidPlatform?`<label class="android-performance-toggle"><input id="android-performance-mode" type="checkbox" ${androidPerformanceMode?"checked":""}><span><strong>Android-Leistungsmodus</strong><small>Reduziert nur auf Android aufwendige Schatten, Blur- und Filtereffekte. Empfohlen für installierte Chrome-PWAs.</small></span></label>`:""}
-        <p class="backup-note">Die Einstellung wird bewusst in localStorage gespeichert und nicht mit dem Charakter-Backup synchronisiert. Browser-Zoom sollte möglichst auf 100 % stehen. Auf Android wird die Größe über den Layout-Viewport statt über CSS-Zoom umgesetzt.</p>
+        <p class="backup-note">Die Einstellung wird bewusst in localStorage gespeichert und nicht mit dem Charakter-Backup synchronisiert. Browser-Zoom sollte möglichst auf 100 % stehen. Die App skaliert ihre Oberflächen über rem-basierte Layoutgrößen; Browser-Zoom, CSS zoom und transform bleiben unangetastet. Das funktioniert auch im installierten Android-PWA-Modus.</p>
       </div>
     </section>`);
     const range=$("#ui-scale-range",layer),output=$("#ui-scale-value",layer),note=$("#ui-scale-layout-note",layer);
     const describe=value=>{
       const factor=value/100;
-      const effective=isAndroidPlatform?Math.max(280,Math.round(androidBaseViewportWidth()/factor)):Math.round((window.innerWidth||document.documentElement.clientWidth||0)/factor);
-      note.textContent=`${isAndroidPlatform?"Android-Viewport":"Layout"}: ca. ${effective}px · ${effective>=1400?"klassische Profiltabelle":"kompakte Profilkarten"}.${isAndroidPlatform?" Änderung wird beim Loslassen angewendet.":""}`;
+      const effective=Math.max(280,Math.round(viewportWidth()/factor));
+      note.textContent=`Effektive Layoutbreite: ca. ${effective}px · ${effective>=1400?"klassische Profiltabelle":"kompakte Profilkarten"}.${isAndroidPlatform?" Die Änderung wird beim Loslassen angewendet.":""}`;
     };
     const commit=()=>{
       const value=applyUiScale(range.value,{persistValue:true});
@@ -1283,7 +1275,20 @@
       await initializeStorage();
       mount();
       let scaleResizeTimer=0;
-      window.addEventListener("resize",()=>{clearTimeout(scaleResizeTimer);scaleResizeTimer=setTimeout(()=>applyUiScale(uiScalePercent),isAndroidPlatform?180:60)},{passive:true});
+      let lastScaleViewportWidth=Math.round(viewportWidth());
+      const refreshScaleForViewport=()=>{
+        const nextWidth=Math.round(viewportWidth());
+        // Mobile Bildschirmtastaturen aendern vor allem die Hoehe des Visual Viewports.
+        // Dafuer ist keine neue Layoutskalierung noetig; so vermeiden wir Reflows waehrend
+        // der Tastaturanimation auf iOS/Android. Neu berechnet wird nur bei echter
+        // Breiten-/Orientierungsaenderung.
+        if(Math.abs(nextWidth-lastScaleViewportWidth)<2)return;
+        lastScaleViewportWidth=nextWidth;
+        clearTimeout(scaleResizeTimer);
+        scaleResizeTimer=setTimeout(()=>applyUiScale(uiScalePercent),120);
+      };
+      window.addEventListener("resize",refreshScaleForViewport,{passive:true});
+      window.visualViewport?.addEventListener("resize",refreshScaleForViewport,{passive:true});
       document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")persist().catch(error=>console.error("Speichern beim Verlassen fehlgeschlagen.",error))});
       window.addEventListener("pagehide",()=>{persist().catch(error=>console.error("Speichern beim Schließen fehlgeschlagen.",error))});
     }catch(error){

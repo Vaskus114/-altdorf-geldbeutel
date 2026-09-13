@@ -10,25 +10,28 @@
   <meta name="description" content="Offline-Charaktermanager, Geldbeutel und Lagerverwaltung für Warhammer Fantasy Roleplay 1. Edition">
   <script>
     (()=>{
-      if(!/Android/i.test(navigator.userAgent||""))return;
+      const ua=navigator.userAgent||"";
       const root=document.documentElement;
-      root.classList.add("platform-android");
-      try{if(localStorage.getItem("altdorf-geldbeutel-android-performance-v1")!=="0")root.classList.add("android-performance")}catch(_){root.classList.add("android-performance")}
+      if(/Android/i.test(ua)){
+        root.classList.add("platform-android");
+        try{if(localStorage.getItem("altdorf-geldbeutel-android-performance-v1")!=="0")root.classList.add("android-performance")}catch(_){root.classList.add("android-performance")}
+      }
+      if(/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))root.classList.add("platform-ios");
+      // Skalierung noch vor dem CSS-Laden anwenden, damit die PWA nicht kurz bei
+      // 100 % aufblitzt. Der Wert bleibt eine reine Geraeteeinstellung.
       try{
-        const raw=localStorage.getItem("altdorf-geldbeutel-ui-scale-v2")||localStorage.getItem("altdorf-geldbeutel-ui-scale-v1")||"100";
-        const value=Math.max(75,Math.min(140,Math.round(Number(raw)/5)*5||100));
-        const base=Math.max(320,Math.round(Number(screen.width)||390));
-        const width=Math.max(280,Math.round(base/(value/100)));
-        const meta=document.querySelector('meta[name="viewport"]');
-        if(meta)meta.setAttribute("content",`width=${width},initial-scale=1,viewport-fit=cover,user-scalable=yes`);
-      }catch(_){/* Standard-Viewport bleibt aktiv. */}
+        const raw=Number(localStorage.getItem("altdorf-geldbeutel-ui-scale-v2")||localStorage.getItem("altdorf-geldbeutel-ui-scale-v1")||100);
+        const scale=Math.max(75,Math.min(140,Math.round(raw/5)*5||100));
+        root.style.fontSize=`${scale}%`;
+        root.dataset.uiScale=String(scale);
+      }catch(_){root.style.fontSize="100%"}
     })();
   </script>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./wallet-icon.svg">
   <link rel="apple-touch-icon" href="./wallet-icon.svg">
   <title>Altdorfer Geldbeutel – WFRP 1E</title>
-  <link rel="stylesheet" href="./styles.css?v=20260913-scale-performance-v2">
+  <link rel="stylesheet" href="./styles.css?v=20260913-scale-performance-v4-rem">
 </head>
 <body>
   <main id="app" class="loading">Das Kontobuch wird geöffnet …</main>
@@ -76,7 +79,7 @@
     </main>
   </template>
 
-  <script src="./wfrp1e-data.js?v=20260913-scale-performance-v2"></script>
-  <script src="./app.js?v=20260913-scale-performance-v2"></script>
+  <script src="./wfrp1e-data.js?v=20260913-scale-performance-v4-rem"></script>
+  <script src="./app.js?v=20260913-scale-performance-v4-rem"></script>
 </body>
 </html>

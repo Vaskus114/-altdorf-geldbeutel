@@ -230,3 +230,24 @@
 - Android-Leistungsmodus (standardmaessig aktiv) reduziert Blur, Filter, Clip-Paths und grosse Schatten.
 - Fixed-Dialoge auf Desktop/iOS an effektive Zoom-Viewportgroesse angepasst.
 - PWA-Cache auf v21 angehoben.
+
+## Skalierung v3 – iPhone & installierte Android-PWA
+
+- dynamische Android-Meta-Viewport-Skalierung entfernt, da Chrome sie im Standalone/PWA-Modus teilweise nicht neu anwendet
+- globales `html { zoom }` entfernt, damit iOS fixed Dialoge bei 125–140 % nicht mehr vertikal verschiebt
+- neue Oberflaechenskalierung: nur Haupt-App und offenes Sheet werden skaliert, der echte Viewport bleibt unveraendert
+- `visualViewport` wird fuer sichtbare Breite/Hoehe verwendet; bessere Reaktion auf Safari-Leisten, Tastatur und Rotation
+- Android-Leistungsmodus weiter optimiert (kein permanentes Body-Overlay)
+
+## Skalierung v4 – plattformunabhängige REM-Skalierung
+
+- CSS `zoom` für App und Dialoge vollständig entfernt.
+- Keine `transform: scale()`- oder Meta-Viewport-Lösung.
+- UI-Größen von px auf rem umgestellt; 100 % bleibt optisch der bisherige Basiszustand und respektiert die Browser-Grundschriftgröße.
+- Skalierungsregler 75–140 % verändert nur die Root-Schriftgröße.
+- Einstellung wird bereits vor dem Laden des Stylesheets angewendet, um sichtbares Umspringen zu vermeiden.
+- iOS-Eingaben behalten mindestens 16 CSS-Pixel Schriftgröße.
+- Touch-Ziele bleiben auch bei 75 % mindestens 44 CSS-Pixel hoch.
+- Effektive Layoutklassen für Profil, Kampf, Karriere, Portrait und Ressourcen erweitert.
+- Android-Leistungsmodus bleibt unverändert verfügbar.
+- Visual-Viewport-Höhenänderungen durch die mobile Tastatur lösen keine unnötige Neuskalierung mehr aus; neu berechnet wird nur bei echter Breiten-/Orientierungsänderung.

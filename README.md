@@ -147,3 +147,10 @@ Advance-Schemes sind in WFRP 1E nicht kumulativ. Bereits gekaufte Advances früh
 ## Anzeigegröße pro Gerät
 
 Über das Zahnrad in der Kopfzeile kann die gesamte Oberfläche zwischen 75 % und 140 % skaliert werden. Der Wert bleibt lokal auf dem jeweiligen Gerät erhalten und ist unabhängig von Charakterdaten und Backups. Browser-Zoom sollte für ein vorhersehbares Ergebnis möglichst auf 100 % stehen.
+
+### Anzeigegröße v3
+Der Regler 75–140 % skaliert die App jetzt ohne dynamische Meta-Viewport-Aenderung. Das ist insbesondere fuer installierte Android-Chrome-PWAs und iPhone/Safari stabiler. Fixed Dialoge bleiben im echten sichtbaren Viewport, waehrend nur die App-Oberflaechen skaliert werden.
+
+## Anzeigegröße – v4
+
+Die Anzeigegröße verwendet jetzt eine plattformunabhängige REM-Skalierung statt CSS `zoom`. Dadurch bleibt der echte Browser-/PWA-Viewport auf iPhone, iPad, Android, Windows und macOS unverändert. Die gewählte Größe (75–140 %) wird pro Gerät gespeichert.
