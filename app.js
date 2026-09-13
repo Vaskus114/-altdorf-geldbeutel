@@ -4,35 +4,81 @@
   const RULES = window.WFRP1E || {locations:["head","rightArm","leftArm","body","rightLeg","leftLeg"],characteristics:[],advanceableCharacteristics:[],careers:{basic:[],advanced:[]},careerDetails:{},careerOptions:[],skills:[],skillDetails:{},armourPresets:[],weaponPresets:[],equipmentPresets:[],spellPresets:[],allowedLayerPairs:[],rules:{advanceCost:100,skillCost:100,spellArmourCostPerPoint:2,specialistUntrainedValue:10}};
   const KEY = "altdorf-geldbeutel-v9";
   const OLD_KEYS = ["altdorf-geldbeutel-v8","altdorf-geldbeutel-v7","altdorf-geldbeutel-v6","altdorf-geldbeutel-v5","altdorf-geldbeutel-v4","altdorf-geldbeutel-v3","altdorf-geldbeutel-v2","altdorf-geldbeutel-v1"];
-  const UI_SCALE_KEY = "altdorf-geldbeutel-ui-scale-v1";
+  const UI_SCALE_KEY = "altdorf-geldbeutel-ui-scale-v2";
+  const LEGACY_UI_SCALE_KEY = "altdorf-geldbeutel-ui-scale-v1";
+  const ANDROID_PERF_KEY = "altdorf-geldbeutel-android-performance-v1";
   const UI_SCALE_MIN = 75;
   const UI_SCALE_MAX = 140;
   const UI_SCALE_STEP = 5;
+  const isAndroidPlatform = /Android/i.test(navigator.userAgent || "");
   const clampUiScale = value => Math.max(UI_SCALE_MIN, Math.min(UI_SCALE_MAX, Math.round(Number(value) / UI_SCALE_STEP) * UI_SCALE_STEP || 100));
   const readUiScale = () => {
-    try { return clampUiScale(localStorage.getItem(UI_SCALE_KEY) || 100); }
+    try { return clampUiScale(localStorage.getItem(UI_SCALE_KEY) || localStorage.getItem(LEGACY_UI_SCALE_KEY) || 100); }
     catch (_) { return 100; }
   };
+  const readAndroidPerformance = () => {
+    if (!isAndroidPlatform) return false;
+    try { const raw=localStorage.getItem(ANDROID_PERF_KEY); return raw===null ? true : raw!=="0"; }
+    catch (_) { return true; }
+  };
   let uiScalePercent = readUiScale();
+  let androidPerformanceMode = readAndroidPerformance();
+  const viewportMeta = () => document.querySelector('meta[name="viewport"]');
+  const androidBaseViewportWidth = () => {
+    // screen.width bleibt unter Chrome/Android vom per Meta-Viewport gesetzten Layout-Zoom unabhaengig.
+    const width=Number(window.screen?.width)||Number(window.visualViewport?.width)||Number(window.innerWidth)||390;
+    return Math.max(320,Math.round(width));
+  };
+  const applyAndroidViewportScale = percent => {
+    const meta=viewportMeta();
+    if(!meta) return androidBaseViewportWidth();
+    const factor=percent/100;
+    const baseWidth=androidBaseViewportWidth();
+    const targetWidth=Math.max(280,Math.round(baseWidth/factor));
+    meta.setAttribute("content",`width=${targetWidth},initial-scale=1,viewport-fit=cover,user-scalable=yes`);
+    return targetWidth;
+  };
+  const applyAndroidPerformance = (enabled=androidPerformanceMode,{persistValue=false}={}) => {
+    androidPerformanceMode=!!enabled && isAndroidPlatform;
+    document.documentElement.classList.toggle("android-performance",androidPerformanceMode);
+    if(persistValue && isAndroidPlatform){
+      try{localStorage.setItem(ANDROID_PERF_KEY,androidPerformanceMode?"1":"0")}catch(_){}
+    }
+    return androidPerformanceMode;
+  };
   const applyUiScale = (value=uiScalePercent,{persistValue=false}={}) => {
     uiScalePercent=clampUiScale(value);
     const factor=uiScalePercent/100;
     const root=document.documentElement;
-    root.style.setProperty("--ui-scale",String(factor));
+    root.classList.toggle("platform-android",isAndroidPlatform);
+    let effectiveWidth;
+    if(isAndroidPlatform){
+      // Android: kein CSS-Zoom der kompletten App. Der Layout-Viewport wird stattdessen
+      // passend gesetzt. Dadurch reagieren Media Queries, fixed-Dialoge und Touch-Ziele
+      // natuerlich auf die vergroesserte/verkleinerte Oberflaeche und Chrome muss nicht
+      // den kompletten Dokumentbaum bei jedem Frame neu mit CSS zoom rasterisieren.
+      root.style.setProperty("--ui-scale","1");
+      effectiveWidth=applyAndroidViewportScale(uiScalePercent);
+    }else{
+      root.style.setProperty("--ui-scale",String(factor));
+      effectiveWidth=(window.innerWidth||root.clientWidth||0)/factor;
+    }
+    const effectiveHeight=(window.innerHeight||root.clientHeight||0)/(isAndroidPlatform?1:factor);
+    root.style.setProperty("--ui-effective-width",`${Math.max(280,effectiveWidth)}px`);
+    root.style.setProperty("--ui-effective-height",`${Math.max(360,effectiveHeight)}px`);
+    root.style.setProperty("--ui-portrait-height",`${Math.max(240,effectiveHeight*0.72)}px`);
     root.dataset.uiScale=String(uiScalePercent);
-    // CSS media queries use the unscaled viewport. The profile table, however,
-    // needs the effective layout width after CSS zoom, otherwise a large UI scale
-    // can reintroduce horizontal overflow on Edge/Android tablets.
-    const effectiveWidth=(window.innerWidth||root.clientWidth||0)/factor;
     root.style.setProperty("--ui-profile-columns",String(effectiveWidth>=1000?4:effectiveWidth>=700?3:2));
     root.classList.toggle("ui-profile-compact-force",effectiveWidth<1400);
     root.classList.toggle("ui-profile-wide-force",effectiveWidth>=1400);
     [520,560,760,900,1050].forEach(limit=>root.classList.toggle(`ui-effective-${limit}`,effectiveWidth<=limit));
+    applyAndroidPerformance(androidPerformanceMode);
     if(persistValue){
       try { localStorage.setItem(UI_SCALE_KEY,String(uiScalePercent)); } catch (_) {}
     }
     return uiScalePercent;
   };
+  applyAndroidPerformance(androidPerformanceMode);
   applyUiScale(uiScalePercent);
   const DB_NAME = "altdorf-geldbeutel";
   const DB_VERSION = 2;
@@ -705,27 +751,33 @@
   const displaySettings = () => {
     const layer=modal(`<section class="sheet display-settings-sheet"><div class="handle"></div><div class="heading"><div><span class="eyebrow">Geräteeinstellung</span><h2>Anzeigegröße</h2></div><button class="close" aria-label="Schließen">×</button></div>
       <div class="display-scale-card">
-        <div class="display-scale-heading"><label for="ui-scale-range"><strong>Zoom der Anwendung</strong><small>Gilt nur auf diesem Gerät und bleibt gespeichert.</small></label><output id="ui-scale-value" for="ui-scale-range">${uiScalePercent}%</output></div>
+        <div class="display-scale-heading"><label for="ui-scale-range"><strong>Anzeigegröße</strong><small>Gilt nur auf diesem Gerät und bleibt gespeichert.</small></label><output id="ui-scale-value" for="ui-scale-range">${uiScalePercent}%</output></div>
         <input id="ui-scale-range" class="display-scale-range" type="range" min="${UI_SCALE_MIN}" max="${UI_SCALE_MAX}" step="${UI_SCALE_STEP}" value="${uiScalePercent}" aria-label="Anzeigegröße in Prozent">
         <div class="display-scale-ticks" aria-hidden="true"><span>${UI_SCALE_MIN}%</span><span>100%</span><span>${UI_SCALE_MAX}%</span></div>
         <div class="display-scale-actions"><button type="button" class="secondary-button" data-scale-delta="-${UI_SCALE_STEP}">− ${UI_SCALE_STEP}%</button><button type="button" class="secondary-button" id="ui-scale-reset">100 % zurücksetzen</button><button type="button" class="secondary-button" data-scale-delta="${UI_SCALE_STEP}">+ ${UI_SCALE_STEP}%</button></div>
         <p class="hint" id="ui-scale-layout-note"></p>
-        <p class="backup-note">Die Einstellung wird bewusst in localStorage gespeichert und nicht mit dem Charakter-Backup synchronisiert. So kann z. B. Windows 90 %, das iPad 100 % und Android 110 % verwenden. Für ein vorhersehbares Ergebnis sollte der Browser-Zoom möglichst auf 100 % stehen.</p>
+        ${isAndroidPlatform?`<label class="android-performance-toggle"><input id="android-performance-mode" type="checkbox" ${androidPerformanceMode?"checked":""}><span><strong>Android-Leistungsmodus</strong><small>Reduziert nur auf Android aufwendige Schatten, Blur- und Filtereffekte. Empfohlen für installierte Chrome-PWAs.</small></span></label>`:""}
+        <p class="backup-note">Die Einstellung wird bewusst in localStorage gespeichert und nicht mit dem Charakter-Backup synchronisiert. Browser-Zoom sollte möglichst auf 100 % stehen. Auf Android wird die Größe über den Layout-Viewport statt über CSS-Zoom umgesetzt.</p>
       </div>
     </section>`);
     const range=$("#ui-scale-range",layer),output=$("#ui-scale-value",layer),note=$("#ui-scale-layout-note",layer);
-    const refresh=()=>{
-      const value=applyUiScale(range.value,{persistValue:true});
-      range.value=String(value);
-      output.textContent=`${value}%`;
-      const effective=Math.round((window.innerWidth||document.documentElement.clientWidth||0)/(value/100));
-      note.textContent=`Effektive Layoutbreite: ca. ${effective}px · ${effective>=1400?"klassische Profiltabelle":"kompakte Profilkarten"}.`;
+    const describe=value=>{
+      const factor=value/100;
+      const effective=isAndroidPlatform?Math.max(280,Math.round(androidBaseViewportWidth()/factor)):Math.round((window.innerWidth||document.documentElement.clientWidth||0)/factor);
+      note.textContent=`${isAndroidPlatform?"Android-Viewport":"Layout"}: ca. ${effective}px · ${effective>=1400?"klassische Profiltabelle":"kompakte Profilkarten"}.${isAndroidPlatform?" Änderung wird beim Loslassen angewendet.":""}`;
     };
-    range.addEventListener("input",refresh);
-    $$('[data-scale-delta]',layer).forEach(button=>button.addEventListener("click",()=>{range.value=String(clampUiScale(uiScalePercent+num(button.dataset.scaleDelta,0)));refresh()}));
-    $("#ui-scale-reset",layer).addEventListener("click",()=>{range.value="100";refresh()});
+    const commit=()=>{
+      const value=applyUiScale(range.value,{persistValue:true});
+      range.value=String(value); output.textContent=`${value}%`; describe(value);
+    };
+    range.addEventListener("input",()=>{const value=clampUiScale(range.value); output.textContent=`${value}%`; describe(value)});
+    range.addEventListener("change",commit);
+    $$('[data-scale-delta]',layer).forEach(button=>button.addEventListener("click",()=>{range.value=String(clampUiScale(uiScalePercent+num(button.dataset.scaleDelta,0)));commit()}));
+    $("#ui-scale-reset",layer).addEventListener("click",()=>{range.value="100";commit()});
+    const performanceToggle=$("#android-performance-mode",layer);
+    performanceToggle?.addEventListener("change",()=>applyAndroidPerformance(performanceToggle.checked,{persistValue:true}));
     $(".close",layer).addEventListener("click",()=>layer.remove());
-    refresh();
+    range.value=String(uiScalePercent); output.textContent=`${uiScalePercent}%`; describe(uiScalePercent);
   };
 
   const characterPicker = () => {
@@ -1230,8 +1282,8 @@
     try{
       await initializeStorage();
       mount();
-      let scaleResizeFrame=0;
-      window.addEventListener("resize",()=>{if(scaleResizeFrame)return;scaleResizeFrame=requestAnimationFrame(()=>{scaleResizeFrame=0;applyUiScale(uiScalePercent)})},{passive:true});
+      let scaleResizeTimer=0;
+      window.addEventListener("resize",()=>{clearTimeout(scaleResizeTimer);scaleResizeTimer=setTimeout(()=>applyUiScale(uiScalePercent),isAndroidPlatform?180:60)},{passive:true});
       document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")persist().catch(error=>console.error("Speichern beim Verlassen fehlgeschlagen.",error))});
       window.addEventListener("pagehide",()=>{persist().catch(error=>console.error("Speichern beim Schließen fehlgeschlagen.",error))});
     }catch(error){

@@ -222,3 +222,11 @@
 - Die Profilansicht berücksichtigt die **effektive Layoutbreite nach Skalierung**; bei zu wenig Platz werden automatisch die kompakten Profilkarten verwendet.
 - Beim Drucken wird auf 100 % zurückgestellt.
 - Service-Worker-Cache auf `v20-ui-scale` erhöht.
+
+
+## Skalierung v2 / Android Performance
+- Android: globalen CSS-Zoom durch Layout-Viewport-Skalierung ersetzt.
+- Slider wendet die teure Layout-Aenderung erst beim Loslassen an.
+- Android-Leistungsmodus (standardmaessig aktiv) reduziert Blur, Filter, Clip-Paths und grosse Schatten.
+- Fixed-Dialoge auf Desktop/iOS an effektive Zoom-Viewportgroesse angepasst.
+- PWA-Cache auf v21 angehoben.

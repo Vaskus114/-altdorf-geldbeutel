@@ -663,11 +663,13 @@ button,
   min-height:44px;
 }
 
-/* Gerätespezifische Anzeigegröße / App-Zoom
-   CSS zoom skaliert Layout und Interaktion gemeinsam und vermeidet die
-   Scroll-/Touch-Probleme einer transform:scale()-Loesung. */
-:root{--ui-scale:1}
-html{zoom:var(--ui-scale)}
+/* Gerätespezifische Anzeigegröße.
+   Desktop/iOS: CSS zoom bleibt als kompatibler Layout-Zoom erhalten.
+   Android: app.js setzt stattdessen einen passenden Layout-Viewport. Das ist
+   auf Chrome/PWA deutlich guenstiger und verhindert abgeschnittene Fixed-UI. */
+:root{--ui-scale:1;--ui-effective-width:100vw;--ui-effective-height:100vh}
+html:not(.platform-android){zoom:var(--ui-scale)}
+html.platform-android{zoom:1!important}
 .topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
 .display-settings-button{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;padding:0;color:var(--bone);background:linear-gradient(#2d2923,#191714);border:1px solid #6b5740;border-radius:2px;box-shadow:inset 0 0 0 2px #12110f,2px 3px 0 rgba(0,0,0,.45);font-family:Georgia,serif;font-size:21px;line-height:1;touch-action:manipulation}
 .display-settings-button:active{transform:translateY(1px)}
@@ -730,3 +732,91 @@ html.ui-effective-520 .profile-compact-grid{grid-template-columns:repeat(2,minma
 html.ui-effective-520 .display-scale-actions{grid-template-columns:1fr!important}
 html.ui-effective-520 .display-scale-heading{align-items:flex-start;flex-direction:column;gap:8px}
 .display-settings-sheet{width:min(100%,560px)}
+
+
+/* Skalierung v2: Fixed-Dialoge werden bei CSS-Zoom auf die effektive Viewportgroesse
+   begrenzt. So bleiben auch 125–140 % komplett sichtbar. Android benoetigt diese
+   Kompensation nicht, weil dort der Layout-Viewport selbst skaliert wird. */
+html:not(.platform-android) .modal{
+  inset:auto!important;
+  top:0!important;
+  left:0!important;
+  width:var(--ui-effective-width)!important;
+  height:var(--ui-effective-height)!important;
+  max-width:none!important;
+}
+html:not(.platform-android) .modal .sheet{
+  max-width:100%!important;
+  max-height:calc(var(--ui-effective-height) - 8px)!important;
+}
+html:not(.platform-android) .modal.character-sheet-modal .character-sheet{
+  width:min(100%,1500px)!important;
+  max-height:calc(var(--ui-effective-height) - 12px)!important;
+}
+html:not(.platform-android) .portrait-viewer{width:min(94%,860px)!important}
+html:not(.platform-android) .portrait-viewer-frame{max-height:var(--ui-portrait-height)}
+
+/* Android-Leistungsmodus: keine Daten-/Regelfunktionen werden veraendert. Es werden
+   nur besonders teure Paint-Effekte reduziert. Das hilft insbesondere Chrome im
+   Standalone/PWA-Modus auf Mittelklasse-Geraeten. */
+html.platform-android.android-performance .backdrop{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.platform-android.android-performance .app{
+  background:linear-gradient(145deg,#24211d,#11110f 55%,#1a1714)!important;
+  box-shadow:none!important;
+}
+html.platform-android.android-performance .wallet,
+html.platform-android.android-performance .character-launch,
+html.platform-android.android-performance .storage-launch{
+  background-image:linear-gradient(120deg,rgba(101,72,43,.16),rgba(15,14,12,.12))!important;
+  box-shadow:none!important;
+  clip-path:none!important;
+}
+html.platform-android.android-performance .wallet:after{box-shadow:none!important}
+html.platform-android.android-performance .ledger,
+html.platform-android.android-performance .sheet,
+html.platform-android.android-performance .character-sheet{
+  background-image:url("./parchment.webp")!important;
+  background-color:#c5b38b!important;
+  box-shadow:none!important;
+  clip-path:none!important;
+}
+html.platform-android.android-performance .character-sheet-frame,
+html.platform-android.android-performance .sheet-box,
+html.platform-android.android-performance .sheet-tabs button.active,
+html.platform-android.android-performance .active-effect-card,
+html.platform-android.android-performance .item-effect-editor-row{
+  box-shadow:none!important;
+}
+html.platform-android.android-performance .coin-image,
+html.platform-android.android-performance .empty-coin,
+html.platform-android.android-performance .full-button:disabled{filter:none!important}
+html.platform-android.android-performance .sheet-watermark{display:none!important}
+html.platform-android.android-performance .sheet{animation:none!important}
+html.platform-android.android-performance .transaction,
+html.platform-android.android-performance .item-row,
+html.platform-android.android-performance .equipment-row,
+html.platform-android.android-performance .spell-card,
+html.platform-android.android-performance .career-skill-row{
+  contain:layout paint style;
+}
+html.platform-android.android-performance .transaction{content-visibility:auto;contain-intrinsic-size:58px}
+html.platform-android.android-performance .rule-description:not([open]) p,
+html.platform-android.android-performance details:not([open])>p{display:none}
+
+.android-performance-toggle{display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:10px;margin-top:14px;padding:10px;border:1px solid rgba(69,53,36,.48);background:rgba(255,255,255,.10);cursor:pointer}
+.android-performance-toggle input{width:20px!important;height:20px!important;min-height:0!important;margin:2px 0 0;padding:0!important}
+.android-performance-toggle span{display:block;min-width:0}
+.android-performance-toggle strong{display:block;color:#2d2118;font-family:"Cinzel Decorative",Georgia,serif;font-size:11px}
+.android-performance-toggle small{display:block;margin-top:3px;color:#665548;font-size:10px;line-height:1.35}
+
+/* Android mit explizitem Layout-Viewport: keine vw-basierten Dialogbreiten, die
+   sich gegen die vergroesserte Ansicht stellen koennen. */
+html.platform-android .modal{max-width:100%!important}
+html.platform-android .sheet{width:min(100%,680px);max-width:100%!important}
+html.platform-android .character-sheet{width:min(100%,1500px)!important;max-width:100%!important}
+html.platform-android .display-settings-sheet{width:min(100%,560px)!important;max-width:100%!important}
+html.platform-android .portrait-viewer{width:min(100%,860px)!important;max-width:100%!important}
+
+/* Slider selbst bleibt leichtgewichtig; die teure Layoutaenderung erfolgt erst
+   beim change-Event (Loslassen) in app.js. */
+.display-scale-range{will-change:auto}
