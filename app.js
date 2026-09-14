@@ -1289,8 +1289,16 @@
       };
       window.addEventListener("resize",refreshScaleForViewport,{passive:true});
       window.visualViewport?.addEventListener("resize",refreshScaleForViewport,{passive:true});
-      document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")persist().catch(error=>console.error("Speichern beim Verlassen fehlgeschlagen.",error))});
-      window.addEventListener("pagehide",()=>{persist().catch(error=>console.error("Speichern beim Schließen fehlgeschlagen.",error))});
+      // Alle fachlichen Änderungen werden bereits unmittelbar beim Bestätigen gespeichert.
+      // Auf iOS/iPadOS kann ein Download/Teilen-Dialog die PWA kurz in den Hintergrund schicken.
+      // Eine zusätzliche IndexedDB-Schreibtransaktion in visibilitychange/pagehide kann dann
+      // vom Betriebssystem abgebrochen werden und fälschlich die Meldung "Lokales Speichern
+      // fehlgeschlagen" auslösen, obwohl das Charakter-Backup korrekt erzeugt wurde.
+      // Deshalb starten wir beim Verlassen KEINE neue Transaktion mehr. Bereits angestoßene
+      // Schreibvorgänge laufen über persistChain weiter; Fehler werden nur protokolliert.
+      const observePendingSave=()=>{if(storageMode==="indexeddb")persistChain.catch(error=>console.error("Laufender Speichervorgang konnte beim Verlassen nicht abgeschlossen werden.",error))};
+      document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")observePendingSave()});
+      window.addEventListener("pagehide",observePendingSave);
     }catch(error){
       console.error("App-Start fehlgeschlagen.",error);
       const app=$("#app");

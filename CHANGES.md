@@ -251,3 +251,11 @@
 - Effektive Layoutklassen für Profil, Kampf, Karriere, Portrait und Ressourcen erweitert.
 - Android-Leistungsmodus bleibt unverändert verfügbar.
 - Visual-Viewport-Höhenänderungen durch die mobile Tastatur lösen keine unnötige Neuskalierung mehr aus; neu berechnet wird nur bei echter Breiten-/Orientierungsänderung.
+
+## iOS-Speicher-/Backup-Fix
+
+- Falsche Meldung „Lokales Speichern fehlgeschlagen“ beim Erstellen eines JSON-Backups auf iPhone/iPad behoben.
+- Ursache: iOS kann beim Öffnen des Download-/Teilen-Dialogs `visibilitychange`/`pagehide` auslösen und eine dort neu gestartete IndexedDB-Schreibtransaktion abbrechen.
+- Beim Verlassen der App wird daher keine redundante neue Schreibtransaktion mehr gestartet. Änderungen werden weiterhin direkt beim Bestätigen gespeichert.
+- Bereits laufende IndexedDB-Speichervorgänge werden nur noch beobachtet; ein Backup-Download erzeugt dadurch keinen falschen Speicherfehler mehr.
+- Service-Worker-Cache auf v23 erhöht.

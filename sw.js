@@ -1,4 +1,4 @@
-const CACHE = "altdorf-geldbeutel-core-v22-scale-performance-v4-rem";
+const CACHE = "altdorf-geldbeutel-core-v23-storage-ios-fix";
 const CORE_FILES = [
   "./",
   "./index.html",

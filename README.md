@@ -154,3 +154,7 @@ Der Regler 75–140 % skaliert die App jetzt ohne dynamische Meta-Viewport-Aende
 ## Anzeigegröße – v4
 
 Die Anzeigegröße verwendet jetzt eine plattformunabhängige REM-Skalierung statt CSS `zoom`. Dadurch bleibt der echte Browser-/PWA-Viewport auf iPhone, iPad, Android, Windows und macOS unverändert. Die gewählte Größe (75–140 %) wird pro Gerät gespeichert.
+
+## Hinweis zu iPhone/iPad-Backups
+
+Beim Export einer JSON-Sicherung kann iOS die PWA kurz in den Hintergrund versetzen. Die App startet dabei keine zusätzliche redundante IndexedDB-Schreibtransaktion mehr. Das verhindert eine falsche Warnung über fehlgeschlagenes lokales Speichern, während die JSON-Datei korrekt erzeugt wird.

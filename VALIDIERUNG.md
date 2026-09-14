@@ -167,3 +167,7 @@ Geprüft:
 
 Hinweis: Ein echter Gerätepark-Test auf physischem iPhone/iPad/Android/Windows/macOS ist in dieser Umgebung nicht möglich. Die v4-Lösung reduziert deshalb bewusst plattformspezifische Sonderwege und nutzt Standard-CSS (`rem`, normale Viewportgrößen, Overflow) als gemeinsame Basis.
 - VisualViewport-Listener reagiert nur auf Breitenänderungen; Tastatur-Höhenanimationen verursachen keinen Skalierungs-Reflow.
+
+## iOS Backup / Lifecycle
+
+Geprüft: Die Anwendung speichert fachliche Änderungen weiterhin an den bestehenden `persist()`-Aufrufstellen. `visibilitychange` und `pagehide` starten keine zusätzliche IndexedDB-Transaktion mehr. Dadurch kann der iOS-Download-/Teilen-Dialog keine falsche lokale Speicherwarnung auslösen. `app.js` und `sw.js` wurden syntaktisch geprüft.
