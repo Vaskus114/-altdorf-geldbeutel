@@ -171,3 +171,14 @@ Hinweis: Ein echter Gerätepark-Test auf physischem iPhone/iPad/Android/Windows/
 ## iOS Backup / Lifecycle
 
 Geprüft: Die Anwendung speichert fachliche Änderungen weiterhin an den bestehenden `persist()`-Aufrufstellen. `visibilitychange` und `pagehide` starten keine zusätzliche IndexedDB-Transaktion mehr. Dadurch kann der iOS-Download-/Teilen-Dialog keine falsche lokale Speicherwarnung auslösen. `app.js` und `sw.js` wurden syntaktisch geprüft.
+
+## Kräuter-Erweiterung · 14.09.2026
+
+- `app.js`, `wfrp1e-data.js` und `sw.js`: Node-Syntaxprüfung bestanden.
+- HTML erfolgreich geparst.
+- CSS erfolgreich mit `tinycss2` geparst; keine Syntaxfehler.
+- 21/21 Kräuter-Presets vorhanden.
+- Name, Availability, Locality, Season, Other Nomenclatures und Beschreibung wurden automatisiert gegen `Identify_Plants.docx` verglichen; alle 21 Datensätze stimmen nach reinem Whitespace-Zusammenführen überein.
+- Keine ENC- oder Preiswerte aus anderen Quellen ergänzt.
+- Neuer Itemtyp `herb` ist optional und beeinträchtigt bestehende Inventar-/Backupdaten nicht.
+- Service-Worker-Cache: `altdorf-geldbeutel-core-v24-herbs`.

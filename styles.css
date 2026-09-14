@@ -854,3 +854,42 @@ html.ui-effective-520 .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))!i
 html.ui-effective-520 .resource-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 html.ui-effective-520 .profile-facts,
 html.ui-effective-520 .form-grid.two{grid-template-columns:1fr!important}
+
+/* Kräuter-Itemtyp: kompakte Metadaten im ausklappbaren Regelbereich. */
+.herb-facts{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:.375rem;
+  padding:0 .6875rem .625rem;
+}
+.herb-facts>div{
+  min-width:0;
+  padding:.4375rem .5rem;
+  border:.0625rem solid rgba(69,53,36,.28);
+  background:rgba(255,255,255,.12);
+}
+.herb-facts small{
+  display:block;
+  margin-bottom:.125rem;
+  color:#735f49;
+  font-size:.5625rem;
+  font-weight:700;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+}
+.herb-facts strong{
+  display:block;
+  overflow-wrap:anywhere;
+  color:#34291f;
+  font-size:.6875rem;
+}
+.item-rule-description .herb-aliases{
+  padding-top:0!important;
+  padding-bottom:.625rem!important;
+}
+.item-rule-description .item-rule-text{
+  padding-top:.125rem!important;
+}
+@media(max-width:560px){
+  .herb-facts{grid-template-columns:1fr;padding-inline:.5rem}
+}

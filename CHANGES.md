@@ -259,3 +259,14 @@
 - Beim Verlassen der App wird daher keine redundante neue Schreibtransaktion mehr gestartet. Änderungen werden weiterhin direkt beim Bestätigen gespeichert.
 - Bereits laufende IndexedDB-Speichervorgänge werden nur noch beobachtet; ein Backup-Download erzeugt dadurch keinen falschen Speicherfehler mehr.
 - Service-Worker-Cache auf v23 erhöht.
+
+## Kräuter-Itemtyp · 14.09.2026
+
+- Neuer Gegenstandstyp **Kräuter**.
+- 21 Kräuter aus `Identify_Plants.docx` als auswählbare Presets übernommen.
+- Pro Kraut werden **Verfügbarkeit**, **Vorkommen / Locality**, **Saison**, **weitere Bezeichnungen** und die **Beschreibung / Regelwirkung** gespeichert.
+- Beschreibung und Regelwirkung werden in der Gegenstandsliste ausklappbar als **Kräuterdaten & Regeln** angezeigt.
+- Kräuterdaten bleiben frei editierbar; eigene Kräuter können ohne Preset angelegt werden.
+- Das Quelldokument enthält keine ENC- oder Preiswerte. Diese werden deshalb nicht erfunden und bleiben beim Preset auf 0 bzw. frei editierbar.
+- Bestehende Charaktere und Backups bleiben kompatibel; das neue Kräuterobjekt ist optional.
+- PWA-Cache auf `v24-herbs` angehoben.

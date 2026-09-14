@@ -158,3 +158,7 @@ Die Anzeigegröße verwendet jetzt eine plattformunabhängige REM-Skalierung sta
 ## Hinweis zu iPhone/iPad-Backups
 
 Beim Export einer JSON-Sicherung kann iOS die PWA kurz in den Hintergrund versetzen. Die App startet dabei keine zusätzliche redundante IndexedDB-Schreibtransaktion mehr. Das verhindert eine falsche Warnung über fehlgeschlagenes lokales Speichern, während die JSON-Datei korrekt erzeugt wird.
+
+## Kräuter
+
+Neben Allgemein, Waffen und Rüstungen gibt es jetzt den Itemtyp **Kräuter**. Die Preset-Liste enthält 21 Kräuter aus dem vom Benutzer bereitgestellten Dokument `Identify_Plants.docx`. Übernommen werden Name, Availability/Verfügbarkeit, Locality/Vorkommen, Season/Saison, Other Nomenclatures/weitere Bezeichnungen sowie die dort angegebene Beschreibung bzw. Regelwirkung. Die Texte bleiben frei editierbar. Da das Dokument keine ENC- oder Preiswerte nennt, werden dafür keine Werte ergänzt.
